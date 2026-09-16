@@ -1,0 +1,3378 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>NEON DRIFT: UNDERGROUND APEX - 2D Top-Down Racing Career RPG</title>
+  <style>
+    :root {
+      --bg-dark: #070913;
+      --bg-panel: rgba(12, 17, 34, 0.92);
+      --bg-card: rgba(20, 28, 54, 0.75);
+      --neon-cyan: #00f3ff;
+      --neon-pink: #ff0055;
+      --neon-yellow: #ffe600;
+      --neon-purple: #9d00ff;
+      --neon-green: #00ff88;
+      --text-main: #f0f4ff;
+      --text-muted: #8c9cb8;
+      --border-glow: 0 0 14px rgba(0, 243, 255, 0.4);
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-family);
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #game-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background: radial-gradient(circle at center, #0f1731 0%, #050711 100%);
+      overflow: hidden;
+    }
+
+    canvas#game-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      z-index: 1;
+    }
+
+    /* Top-level UI Screens */
+    .ui-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: opacity 0.25s ease;
+    }
+
+    .interactive {
+      pointer-events: auto;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Neon Buttons & Components */
+    .btn {
+      background: linear-gradient(135deg, rgba(0, 243, 255, 0.15), rgba(157, 0, 255, 0.25));
+      border: 1px solid var(--neon-cyan);
+      color: #fff;
+      padding: 12px 24px;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      border-radius: 4px;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(0, 243, 255, 0.25);
+      transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn:hover:not(:disabled) {
+      background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+      color: #05070e;
+      box-shadow: 0 0 22px rgba(0, 243, 255, 0.75);
+      transform: translateY(-2px);
+    }
+
+    .btn:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    .btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      border-color: #444;
+      box-shadow: none;
+    }
+
+    .btn-pink {
+      border-color: var(--neon-pink);
+      background: linear-gradient(135deg, rgba(255, 0, 85, 0.2), rgba(157, 0, 255, 0.2));
+      box-shadow: 0 0 10px rgba(255, 0, 85, 0.3);
+    }
+
+    .btn-pink:hover:not(:disabled) {
+      background: linear-gradient(135deg, var(--neon-pink), var(--neon-yellow));
+      color: #05070e;
+      box-shadow: 0 0 22px rgba(255, 0, 85, 0.75);
+    }
+
+    .btn-green {
+      border-color: var(--neon-green);
+      background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 243, 255, 0.2));
+      box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+    }
+
+    .btn-green:hover:not(:disabled) {
+      background: linear-gradient(135deg, var(--neon-green), var(--neon-cyan));
+      color: #05070e;
+      box-shadow: 0 0 22px rgba(0, 255, 136, 0.75);
+    }
+
+    .btn-small {
+      padding: 6px 14px;
+      font-size: 12px;
+    }
+
+    /* Screen Panels */
+    .screen-panel {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 90%;
+      max-width: 1100px;
+      max-height: 90vh;
+      background: var(--bg-panel);
+      backdrop-filter: blur(18px);
+      border: 1px solid rgba(0, 243, 255, 0.45);
+      border-radius: 12px;
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.85), var(--border-glow);
+      padding: 28px 36px;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      z-index: 20;
+    }
+
+    .screen-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(0, 243, 255, 0.25);
+      padding-bottom: 14px;
+      margin-bottom: 20px;
+    }
+
+    .screen-title {
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      background: linear-gradient(90deg, #ffffff, var(--neon-cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-transform: uppercase;
+    }
+
+    .credits-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--neon-yellow);
+      background: rgba(255, 230, 0, 0.12);
+      padding: 6px 18px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 230, 0, 0.45);
+      text-shadow: 0 0 10px rgba(255, 230, 0, 0.5);
+    }
+
+    /* Main Menu */
+    #menu-screen {
+      text-align: center;
+      max-width: 620px;
+      align-items: center;
+      gap: 22px;
+    }
+
+    .game-logo {
+      font-size: 44px;
+      font-weight: 900;
+      font-style: italic;
+      letter-spacing: 4px;
+      line-height: 1.1;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #ffffff 0%, var(--neon-cyan) 45%, var(--neon-pink) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 25px rgba(0, 243, 255, 0.65));
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: var(--neon-cyan);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .menu-button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+    }
+
+    /* Top HUD in Race */
+    #race-hud {
+      pointer-events: none;
+    }
+
+    .hud-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 16px 24px;
+      font-family: monospace;
+      font-size: 18px;
+      font-weight: 800;
+      text-shadow: 0 0 8px rgba(0, 0, 0, 0.9);
+    }
+
+    .hud-top-left {
+      display: flex;
+      gap: 14px;
+    }
+
+    .hud-pos-box {
+      background: rgba(0, 0, 0, 0.65);
+      border-left: 4px solid var(--neon-cyan);
+      padding: 6px 16px;
+      border-radius: 4px;
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      backdrop-filter: blur(4px);
+    }
+
+    .hud-pos-main {
+      font-size: 32px;
+      color: var(--neon-cyan);
+    }
+
+    .hud-lap-box, .hud-time-box {
+      background: rgba(0, 0, 0, 0.65);
+      padding: 6px 16px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(4px);
+    }
+
+    /* Live HUD Minimap */
+    .hud-minimap-container {
+      background: rgba(8, 12, 24, 0.75);
+      border: 2px solid rgba(0, 243, 255, 0.4);
+      border-radius: 8px;
+      box-shadow: 0 0 16px rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(6px);
+      padding: 6px;
+    }
+
+    /* Drift Combo Floating Alert */
+    .drift-alert {
+      position: absolute;
+      top: 24%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      pointer-events: none;
+      transition: transform 0.1s ease-out;
+    }
+
+    .drift-score-val {
+      font-size: 40px;
+      font-weight: 900;
+      color: var(--neon-yellow);
+      text-shadow: 0 0 16px var(--neon-yellow), 0 0 35px rgba(255, 230, 0, 0.6);
+      letter-spacing: 2px;
+    }
+
+    .drift-mult-val {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--neon-pink);
+      text-shadow: 0 0 10px var(--neon-pink);
+    }
+
+    /* Slipstream Alert */
+    .slipstream-alert {
+      position: absolute;
+      top: 34%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--neon-cyan);
+      background: rgba(0, 243, 255, 0.22);
+      border: 1px solid var(--neon-cyan);
+      padding: 5px 20px;
+      border-radius: 20px;
+      letter-spacing: 3px;
+      text-shadow: 0 0 12px var(--neon-cyan);
+      animation: pulse 0.5s infinite alternate;
+    }
+
+    @keyframes pulse {
+      from { transform: translate(-50%, -50%) scale(0.96); opacity: 0.75; }
+      to { transform: translate(-50%, -50%) scale(1.06); opacity: 1; }
+    }
+
+    /* Bottom HUD (Speedometer, Tachometer, NOS) */
+    .hud-bottom-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding: 20px 24px;
+    }
+
+    .hud-controls-hint {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(6px);
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .hud-controls-hint kbd {
+      background: #1c253d;
+      color: #fff;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: inherit;
+      border: 1px solid #415582;
+    }
+
+    /* Mobile Virtual Touch Controls */
+    .touch-controls-container {
+      position: absolute;
+      bottom: 16px;
+      left: 0;
+      width: 100%;
+      display: none;
+      justify-content: space-between;
+      padding: 0 24px;
+      pointer-events: auto;
+      z-index: 15;
+    }
+
+    .touch-btn {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.15);
+      border: 2px solid var(--neon-cyan);
+      color: #fff;
+      font-size: 22px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 12px rgba(0, 243, 255, 0.35);
+      touch-action: none;
+    }
+
+    .touch-btn:active {
+      background: var(--neon-cyan);
+      color: #000;
+    }
+
+    .hud-gauges {
+      display: flex;
+      gap: 16px;
+      align-items: flex-end;
+    }
+
+    .nos-gauge-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .nos-gauge-label {
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      color: var(--neon-cyan);
+    }
+
+    .nos-bar-bg {
+      width: 22px;
+      height: 110px;
+      background: rgba(0, 0, 0, 0.65);
+      border: 2px solid var(--neon-cyan);
+      border-radius: 12px;
+      padding: 2px;
+      display: flex;
+      flex-direction: column-reverse;
+      box-shadow: 0 0 12px rgba(0, 243, 255, 0.35);
+    }
+
+    .nos-bar-fill {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(0deg, #0088ff, var(--neon-cyan));
+      border-radius: 8px;
+      transition: height 0.05s linear;
+      box-shadow: 0 0 10px var(--neon-cyan);
+    }
+
+    .cluster-box {
+      background: rgba(8, 12, 24, 0.88);
+      backdrop-filter: blur(8px);
+      border: 2px solid rgba(0, 243, 255, 0.4);
+      border-radius: 12px;
+      padding: 12px 20px;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+      min-width: 140px;
+    }
+
+    .speed-number {
+      font-size: 46px;
+      font-weight: 900;
+      color: #fff;
+      font-family: monospace;
+      line-height: 1;
+      text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+    }
+
+    .speed-unit {
+      font-size: 12px;
+      color: var(--neon-cyan);
+      font-weight: 700;
+      letter-spacing: 2px;
+      margin-top: 4px;
+    }
+
+    .gear-indicator {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--neon-pink);
+      margin-top: 6px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 4px;
+    }
+
+    /* Garage & Career Grid Layout */
+    .grid-2col {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 24px;
+      margin-top: 10px;
+    }
+
+    .car-showcase-panel {
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-card);
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 18px;
+      align-items: center;
+      position: relative;
+    }
+
+    .car-preview-canvas {
+      width: 100%;
+      height: 220px;
+      border-radius: 6px;
+      background: radial-gradient(circle at center, #1b2649 0%, #0c1122 100%);
+      margin-bottom: 14px;
+      border: 1px solid rgba(0, 243, 255, 0.25);
+    }
+
+    .car-selector-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      margin-bottom: 12px;
+    }
+
+    .car-title-info {
+      text-align: center;
+    }
+
+    .car-name {
+      font-size: 22px;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: 1px;
+    }
+
+    .car-class-badge {
+      font-size: 12px;
+      color: var(--neon-cyan);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    /* Stats Bar List */
+    .stats-list {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .stat-row {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .stat-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .stat-bar-track {
+      width: 100%;
+      height: 8px;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .stat-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+
+    /* Upgrades Tuning Tab */
+    .tuning-parts-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 480px;
+      overflow-y: auto;
+      padding-right: 6px;
+    }
+
+    .part-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: border-color 0.2s;
+    }
+
+    .part-card:hover {
+      border-color: rgba(0, 243, 255, 0.4);
+    }
+
+    .part-details {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .part-name {
+      font-size: 15px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .part-tier-pips {
+      display: flex;
+      gap: 4px;
+      margin-top: 3px;
+    }
+
+    .pip {
+      width: 16px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 2px;
+    }
+
+    .pip.filled {
+      background: var(--neon-cyan);
+      box-shadow: 0 0 6px var(--neon-cyan);
+    }
+
+    .part-effect {
+      font-size: 11px;
+      color: var(--neon-green);
+    }
+
+    /* Color Swatches */
+    .color-swatches {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      align-items: center;
+    }
+
+    .color-swatch {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      transition: transform 0.15s;
+    }
+
+    .color-swatch:hover, .color-swatch.active {
+      transform: scale(1.2);
+      border-color: #fff;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+    }
+
+    /* Circuit Select / Career Progression Grid */
+    .league-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+    }
+
+    .league-tab-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-muted);
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .league-tab-btn.active {
+      background: rgba(0, 243, 255, 0.15);
+      border-color: var(--neon-cyan);
+      color: var(--neon-cyan);
+      box-shadow: 0 0 12px rgba(0, 243, 255, 0.3);
+    }
+
+    .circuit-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .circuit-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .circuit-card:hover:not(.locked) {
+      border-color: var(--neon-cyan);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(0, 243, 255, 0.2);
+    }
+
+    .circuit-card.locked {
+      opacity: 0.5;
+      filter: grayscale(0.8);
+    }
+
+    .circuit-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .circuit-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .circuit-stars {
+      color: var(--neon-yellow);
+      font-size: 14px;
+      letter-spacing: 2px;
+    }
+
+    .circuit-preview-box {
+      width: 100%;
+      height: 120px;
+      background: #090e1d;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .circuit-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Drag Race View & Tachometer */
+    .drag-cluster {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      margin-top: 10px;
+    }
+
+    .drag-tacho-canvas {
+      width: 280px;
+      height: 280px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #101935 0%, #050813 100%);
+      border: 3px solid var(--neon-cyan);
+      box-shadow: 0 0 25px rgba(0, 243, 255, 0.35);
+    }
+
+    .drag-shift-hint {
+      font-size: 24px;
+      font-weight: 900;
+      height: 32px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .drag-shift-hint.perfect { color: var(--neon-green); text-shadow: 0 0 15px var(--neon-green); }
+    .drag-shift-hint.good { color: var(--neon-cyan); text-shadow: 0 0 15px var(--neon-cyan); }
+    .drag-shift-hint.early { color: var(--neon-yellow); text-shadow: 0 0 15px var(--neon-yellow); }
+    .drag-shift-hint.late { color: var(--neon-pink); text-shadow: 0 0 15px var(--neon-pink); }
+
+    /* Race Finish Result Modal */
+    .result-summary-box {
+      background: var(--bg-card);
+      border-radius: 8px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin: 16px 0;
+      border: 1px solid rgba(0, 243, 255, 0.2);
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .result-row.highlight {
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 8px;
+    }
+
+    .result-row span.val {
+      color: var(--neon-cyan);
+      font-family: monospace;
+      font-size: 18px;
+    }
+
+    .result-row.highlight span.val {
+      color: var(--neon-yellow);
+      font-size: 22px;
+    }
+
+    /* Pause Overlay */
+    #pause-screen {
+      text-align: center;
+      max-width: 440px;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .screen-panel {
+        width: 95%;
+        padding: 20px;
+      }
+      .grid-2col {
+        grid-template-columns: 1fr;
+      }
+      .hud-controls-hint {
+        display: none;
+      }
+      .touch-controls-container {
+        display: flex;
+      }
+      .speed-number {
+        font-size: 34px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="game-container">
+    <!-- Main 2D Racing Simulation Canvas -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- 1. MAIN MENU SCREEN -->
+    <div id="menu-screen" class="screen-panel interactive">
+      <div class="game-logo">NEON DRIFT</div>
+      <div class="subtitle">Underground Apex // Cyber Circuit RPG</div>
+
+      <div class="credits-badge" id="menu-credits-display">
+        <span>CR</span> <span id="menu-credits-val">12,500</span>
+      </div>
+
+      <div class="menu-button-group">
+        <button class="btn btn-green" id="btn-menu-career">🏁 커리어 리그 (Career League)</button>
+        <button class="btn" id="btn-menu-garage">🔧 차고 & 튜닝 숍 (Garage)</button>
+        <button class="btn btn-pink" id="btn-menu-drag">⚡ 1/4마일 드래그 레이스 (Drag Strip)</button>
+        <button class="btn" id="btn-menu-bounties">🏆 스폰서 바운티 퀘스트 (Contracts)</button>
+        <button class="btn btn-small" id="btn-audio-toggle" style="margin-top: 10px;">🔊 오디오 ON/OFF</button>
+        <button class="btn btn-small btn-pink" id="btn-data-reset" style="opacity: 0.6;">데이터 초기화 (Reset)</button>
+      </div>
+      <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">
+        조작: [W/A/S/D] or [방향키] 주행, [SPACE] 파워 드리프트, [SHIFT] NOS 부스트
+      </div>
+    </div>
+
+    <!-- 2. CAREER / CIRCUIT SELECT SCREEN -->
+    <div id="career-screen" class="screen-panel hidden interactive">
+      <div class="screen-header">
+        <div>
+          <div class="screen-title">커리어 레이싱 리그</div>
+          <div style="font-size: 13px; color: var(--text-muted);">지하 언더그라운드 리그 12개 서킷을 제패하고 전설의 레이서가 되세요</div>
+        </div>
+        <div class="credits-badge">
+          <span>CR</span> <span class="player-credits-val">0</span>
+        </div>
+      </div>
+
+      <!-- League Tabs -->
+      <div class="league-tabs">
+        <button class="league-tab-btn active" data-league="0">1. 루키 컵 (Rookie Cup)</button>
+        <button class="league-tab-btn" data-league="1">2. 클럽맨 컵 (Clubman Cup)</button>
+        <button class="league-tab-btn" data-league="2">3. 나이트 스트리트 (Night Street)</button>
+        <button class="league-tab-btn" data-league="3">4. 그랜드 마스터 (Grand Master)</button>
+      </div>
+
+      <!-- Circuit Cards Grid -->
+      <div class="circuit-grid" id="circuit-grid-container">
+        <!-- Injected via JS -->
+      </div>
+
+      <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+        <button class="btn" id="btn-career-back">메인 메뉴로 (Back)</button>
+      </div>
+    </div>
+
+    <!-- 3. GARAGE & TUNING SCREEN -->
+    <div id="garage-screen" class="screen-panel hidden interactive">
+      <div class="screen-header">
+        <div>
+          <div class="screen-title">언더그라운드 차고지 & 튜닝 워크숍</div>
+          <div style="font-size: 13px; color: var(--text-muted);">6종 머신 구입, 6대 하드웨어 튜닝 및 네온 컬러 커스텀</div>
+        </div>
+        <div class="credits-badge">
+          <span>CR</span> <span class="player-credits-val">0</span>
+        </div>
+      </div>
+
+      <div class="grid-2col">
+        <!-- Left: Car Showcase -->
+        <div class="car-showcase-panel">
+          <div class="car-selector-nav">
+            <button class="btn btn-small" id="btn-car-prev">◀ 이전</button>
+            <div class="car-title-info">
+              <div class="car-name" id="garage-car-name">AE-Sprinter</div>
+              <div class="car-class-badge" id="garage-car-class">Class C // Hatchback</div>
+            </div>
+            <button class="btn btn-small" id="btn-car-next">다음 ▶</button>
+          </div>
+
+          <canvas id="car-preview-canvas" class="car-preview-canvas" width="400" height="220"></canvas>
+
+          <!-- Action (Select or Buy) -->
+          <button class="btn btn-green" id="btn-car-action" style="width: 100%; margin-bottom: 12px;">선택됨 (Active)</button>
+
+          <!-- Color Customizer -->
+          <div style="font-size: 12px; color: var(--text-muted); align-self: flex-start;">네온 도색 커스텀:</div>
+          <div class="color-swatches" id="color-swatches-container"></div>
+
+          <!-- Dynamic Car Stats Bar -->
+          <div class="stats-list">
+            <div class="stat-row">
+              <div class="stat-header"><span>최고속도 (Top Speed)</span><span id="stat-val-speed">185 km/h</span></div>
+              <div class="stat-bar-track"><div class="stat-bar-fill" id="stat-bar-speed" style="width: 45%;"></div></div>
+            </div>
+            <div class="stat-row">
+              <div class="stat-header"><span>가속 토크 (Acceleration)</span><span id="stat-val-accel">5.2s</span></div>
+              <div class="stat-bar-track"><div class="stat-bar-fill" id="stat-bar-accel" style="width: 50%;"></div></div>
+            </div>
+            <div class="stat-row">
+              <div class="stat-header"><span>드리프트 제어 & 코너링 그립</span><span id="stat-val-grip">B+</span></div>
+              <div class="stat-bar-track"><div class="stat-bar-fill" id="stat-bar-grip" style="width: 60%;"></div></div>
+            </div>
+            <div class="stat-row">
+              <div class="stat-header"><span>경량화 & 섀시 밸런스</span><span id="stat-val-weight">1,050 kg</span></div>
+              <div class="stat-bar-track"><div class="stat-bar-fill" id="stat-bar-weight" style="width: 70%;"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: 6-Part Hardware Tuning -->
+        <div style="display: flex; flex-direction: column;">
+          <div style="font-size: 16px; font-weight: 800; color: var(--neon-cyan); margin-bottom: 10px;">
+            하드웨어 업그레이드 (Performance Tuning)
+          </div>
+          <div class="tuning-parts-list" id="tuning-parts-container">
+            <!-- 6 parts injected via JS -->
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+        <button class="btn" id="btn-garage-back">메인 메뉴로 (Back)</button>
+      </div>
+    </div>
+
+    <!-- 4. DRAG RACE / SPEED STRIP SCREEN -->
+    <div id="drag-screen" class="screen-panel hidden interactive">
+      <div class="screen-header">
+        <div>
+          <div class="screen-title">1/4마일(400M) 드래그 레이스 챌린지</div>
+          <div style="font-size: 13px; color: var(--text-muted);">타코미터 RPM 그린존을 노려 완벽한 변속으로 라이벌을 압도하세요</div>
+        </div>
+        <div class="credits-badge">
+          <span>CR</span> <span class="player-credits-val">0</span>
+        </div>
+      </div>
+
+      <div class="drag-cluster">
+        <canvas id="drag-tacho-canvas" class="drag-tacho-canvas" width="300" height="300"></canvas>
+        <div class="drag-shift-hint" id="drag-shift-feedback">READY...</div>
+
+        <div style="display: flex; gap: 30px; font-family: monospace; font-size: 18px;">
+          <div>기어: <span id="drag-gear-display" style="color: var(--neon-pink); font-size: 26px; font-weight: 900;">1</span>단</div>
+          <div>거리: <span id="drag-dist-display" style="color: var(--neon-cyan);">0 / 400 m</span></div>
+          <div>시간: <span id="drag-time-display" style="color: var(--neon-yellow);">0.00 s</span></div>
+        </div>
+
+        <div style="display: flex; gap: 14px; margin-top: 10px;">
+          <button class="btn btn-green" id="btn-drag-start">레이스 시작 (Space)</button>
+          <button class="btn btn-pink" id="btn-drag-shift" disabled>기어 변속! (Shift / Space)</button>
+        </div>
+      </div>
+
+      <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+        <button class="btn" id="btn-drag-back">메인 메뉴로 (Back)</button>
+      </div>
+    </div>
+
+    <!-- 5. SPONSOR BOUNTIES SCREEN -->
+    <div id="bounties-screen" class="screen-panel hidden interactive">
+      <div class="screen-header">
+        <div>
+          <div class="screen-title">스폰서 의뢰 계약 (Bounties)</div>
+          <div style="font-size: 13px; color: var(--text-muted);">언더그라운드 스폰서들이 요구하는 미션을 달성하고 특별 상금을 획득하세요</div>
+        </div>
+        <div class="credits-badge">
+          <span>CR</span> <span class="player-credits-val">0</span>
+        </div>
+      </div>
+
+      <div id="bounties-list-container" style="display: flex; flex-direction: column; gap: 12px;">
+        <!-- Injected via JS -->
+      </div>
+
+      <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+        <button class="btn" id="btn-bounties-back">메인 메뉴로 (Back)</button>
+      </div>
+    </div>
+
+    <!-- 6. IN-RACE HUD (DURING CIRCUIT RACE) -->
+    <div id="race-hud" class="ui-layer hidden">
+      <!-- Top HUD -->
+      <div class="hud-top-bar">
+        <div class="hud-top-left">
+          <div class="hud-pos-box">
+            <span style="font-size: 14px; color: var(--text-muted);">POS</span>
+            <span class="hud-pos-main" id="hud-pos-val">1</span>
+            <span style="font-size: 16px; color: var(--text-muted);">/ 4</span>
+          </div>
+          <div class="hud-lap-box">
+            LAP <span id="hud-lap-val" style="color: var(--neon-yellow);">1 / 3</span>
+          </div>
+          <div class="hud-time-box">
+            TIME <span id="hud-time-val" style="color: #fff;">0:00.00</span>
+          </div>
+        </div>
+
+        <!-- Live Track Mini-Map -->
+        <div class="hud-minimap-container">
+          <canvas id="hud-minimap-canvas" width="160" height="110"></canvas>
+        </div>
+      </div>
+
+      <!-- Drift Floating Notification -->
+      <div class="drift-alert hidden" id="drift-alert-box">
+        <div class="drift-score-val" id="drift-score-text">+450</div>
+        <div class="drift-mult-val" id="drift-mult-text">DRIFT x1.5</div>
+      </div>
+
+      <!-- Slipstream Notification -->
+      <div class="slipstream-alert hidden" id="slipstream-alert-box">
+        SLIPSTREAM BOOST ▲
+      </div>
+
+      <!-- Mobile Touch Controls -->
+      <div class="touch-controls-container">
+        <div style="display: flex; gap: 12px;">
+          <div class="touch-btn" id="touch-left">◀</div>
+          <div class="touch-btn" id="touch-right">▶</div>
+        </div>
+        <div style="display: flex; gap: 12px;">
+          <div class="touch-btn" id="touch-brake" style="border-color: var(--neon-pink);">■</div>
+          <div class="touch-btn" id="touch-handbrake" style="border-color: var(--neon-yellow); font-size: 14px;">DRIFT</div>
+          <div class="touch-btn" id="touch-gas" style="border-color: var(--neon-green);">▲</div>
+        </div>
+      </div>
+
+      <!-- Bottom HUD -->
+      <div class="hud-bottom-bar">
+        <div class="hud-controls-hint">
+          [<kbd>W</kbd>/<kbd>▲</kbd>] 가속 &nbsp;|&nbsp; [<kbd>S</kbd>/<kbd>▼</kbd>] 브레이크/후진<br>
+          [<kbd>A</kbd>/<kbd>D</kbd>] 조향 &nbsp;|&nbsp; [<kbd>SPACE</kbd>] 파워 드리프트<br>
+          [<kbd>SHIFT</kbd>] NOS 부스터 &nbsp;|&nbsp; [<kbd>ESC</kbd>] 일시정지
+        </div>
+
+        <div class="hud-gauges">
+          <!-- NOS Bar -->
+          <div class="nos-gauge-container">
+            <div class="nos-bar-bg">
+              <div class="nos-bar-fill" id="hud-nos-bar"></div>
+            </div>
+            <div class="nos-gauge-label">NOS</div>
+          </div>
+
+          <!-- Digital Speedometer -->
+          <div class="cluster-box">
+            <div class="speed-number" id="hud-speed-val">0</div>
+            <div class="speed-unit">KM / H</div>
+            <div class="gear-indicator" id="hud-gear-val">1 GEAR</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. RACE RESULTS SCREEN -->
+    <div id="result-screen" class="screen-panel hidden interactive">
+      <div class="screen-header">
+        <div>
+          <div class="screen-title" id="result-header-title">레이스 결과</div>
+          <div style="font-size: 13px; color: var(--text-muted);" id="result-circuit-name">루키 컵: 네온 독스</div>
+        </div>
+        <div class="credits-badge">
+          <span>CR</span> <span class="player-credits-val">0</span>
+        </div>
+      </div>
+
+      <div class="result-summary-box">
+        <div class="result-row">
+          <span>최종 순위</span>
+          <span class="val" id="res-pos-val" style="color: var(--neon-cyan); font-size: 24px; font-weight: 900;">1st Place</span>
+        </div>
+        <div class="result-row">
+          <span>총 랩타임 (Total Time)</span>
+          <span class="val" id="res-time-val">1:24.88</span>
+        </div>
+        <div class="result-row">
+          <span>최고 랩타임 (Best Lap)</span>
+          <span class="val" id="res-bestlap-val">27.42</span>
+        </div>
+        <div class="result-row">
+          <span>총 드리프트 포인트</span>
+          <span class="val" id="res-drift-val">4,820 PTS</span>
+        </div>
+        <div class="result-row highlight">
+          <span>획득 총 상금 (Total Reward)</span>
+          <span class="val" id="res-reward-val">+15,000 CR</span>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 14px; justify-content: flex-end;">
+        <button class="btn" id="btn-result-retry">다시 도전 (Retry)</button>
+        <button class="btn btn-green" id="btn-result-continue">커리어로 복귀 (Continue)</button>
+      </div>
+    </div>
+
+    <!-- 8. PAUSE SCREEN -->
+    <div id="pause-screen" class="screen-panel hidden interactive">
+      <div class="game-logo" style="font-size: 32px;">일시정지</div>
+      <div class="menu-button-group" style="margin-top: 14px;">
+        <button class="btn btn-green" id="btn-pause-resume">레이스 계속하기 (Resume)</button>
+        <button class="btn" id="btn-pause-restart">처음부터 재도전 (Restart)</button>
+        <button class="btn btn-pink" id="btn-pause-quit">레이스 포기 및 나가기 (Quit)</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+  /**
+   * NEON DRIFT: UNDERGROUND APEX
+   * Complete Standalone Top-Down Physics Racing Career RPG
+   * External zero-dependency pure HTML5 Canvas & Web Audio API Engine
+   */
+
+  // ==========================================
+  // 1. PROCEDURAL SOUND SYNTHESIZER (WEB AUDIO API)
+  // ==========================================
+  class SoundEngine {
+    constructor() {
+      this.ctx = null;
+      this.enabled = true;
+      this.engineOsc = null;
+      this.engineGain = null;
+      this.skidGain = null;
+      this.skidFilter = null;
+      this.nosGain = null;
+      this.initialized = false;
+    }
+
+    init() {
+      if (this.initialized) return;
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        this.ctx = new AudioContext();
+
+        // 1. Engine Sound Subsystem (Distorted Sawtooth + Filter)
+        this.engineOsc = this.ctx.createOscillator();
+        this.engineOsc.type = 'sawtooth';
+        this.engineOsc.frequency.setValueAtTime(55, this.ctx.currentTime);
+
+        this.engineFilter = this.ctx.createBiquadFilter();
+        this.engineFilter.type = 'lowpass';
+        this.engineFilter.frequency.setValueAtTime(320, this.ctx.currentTime);
+
+        // Distortion Shaper for Aggressive Exhaust Tone
+        const waveShaper = this.ctx.createWaveShaper();
+        waveShaper.curve = this.makeDistortionCurve(18);
+
+        this.engineGain = this.ctx.createGain();
+        this.engineGain.gain.setValueAtTime(0, this.ctx.currentTime);
+
+        this.engineOsc.connect(this.engineFilter);
+        this.engineFilter.connect(waveShaper);
+        waveShaper.connect(this.engineGain);
+        this.engineGain.connect(this.ctx.destination);
+        this.engineOsc.start();
+
+        // 2. Tire Skid Noise Subsystem (White Noise + Bandpass Filter)
+        const bufferSize = this.ctx.sampleRate * 2;
+        const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          output[i] = Math.random() * 2 - 1;
+        }
+
+        const whiteNoise = this.ctx.createBufferSource();
+        whiteNoise.buffer = noiseBuffer;
+        whiteNoise.loop = true;
+
+        this.skidFilter = this.ctx.createBiquadFilter();
+        this.skidFilter.type = 'bandpass';
+        this.skidFilter.frequency.setValueAtTime(1150, this.ctx.currentTime);
+        this.skidFilter.Q.setValueAtTime(2.8, this.ctx.currentTime);
+
+        this.skidGain = this.ctx.createGain();
+        this.skidGain.gain.setValueAtTime(0, this.ctx.currentTime);
+
+        whiteNoise.connect(this.skidFilter);
+        this.skidFilter.connect(this.skidGain);
+        this.skidGain.connect(this.ctx.destination);
+        whiteNoise.start();
+
+        // 3. NOS Booster Hiss Subsystem
+        const nosNoise = this.ctx.createBufferSource();
+        nosNoise.buffer = noiseBuffer;
+        nosNoise.loop = true;
+
+        const nosFilter = this.ctx.createBiquadFilter();
+        nosFilter.type = 'highpass';
+        nosFilter.frequency.setValueAtTime(2200, this.ctx.currentTime);
+
+        this.nosGain = this.ctx.createGain();
+        this.nosGain.gain.setValueAtTime(0, this.ctx.currentTime);
+
+        nosNoise.connect(nosFilter);
+        nosFilter.connect(this.nosGain);
+        this.nosGain.connect(this.ctx.destination);
+        nosNoise.start();
+
+        this.initialized = true;
+      } catch (e) {
+        console.warn('AudioContext init failed:', e);
+      }
+    }
+
+    makeDistortionCurve(amount) {
+      const k = typeof amount === 'number' ? amount : 50;
+      const n_samples = 44100;
+      const curve = new Float32Array(n_samples);
+      const deg = Math.PI / 180;
+      for (let i = 0; i < n_samples; ++i) {
+        const x = (i * 2) / n_samples - 1;
+        curve[i] = ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
+      }
+      return curve;
+    }
+
+    updateEngine(rpmRatio, throttle, inRace = true) {
+      if (!this.initialized || !this.enabled || !this.ctx) return;
+      if (this.ctx.state === 'suspended') {
+        this.ctx.resume();
+      }
+
+      if (!inRace) {
+        this.engineGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.05);
+        this.skidGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.05);
+        this.nosGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.05);
+        return;
+      }
+
+      // Base Pitch: 45Hz idle up to 420Hz redline
+      const freq = 45 + rpmRatio * 350;
+      this.engineOsc.frequency.setTargetAtTime(freq, this.ctx.currentTime, 0.04);
+      this.engineFilter.frequency.setTargetAtTime(260 + rpmRatio * 1900 + (throttle ? 400 : 0), this.ctx.currentTime, 0.04);
+
+      // Volume: higher with throttle
+      const vol = throttle ? 0.22 : 0.08;
+      this.engineGain.gain.setTargetAtTime(vol, this.ctx.currentTime, 0.04);
+    }
+
+    updateSkid(intensity) {
+      if (!this.initialized || !this.enabled || !this.skidGain) return;
+      const targetVol = Math.min(0.28, Math.max(0, intensity * 0.28));
+      this.skidGain.gain.setTargetAtTime(targetVol, this.ctx.currentTime, 0.05);
+    }
+
+    updateNos(active) {
+      if (!this.initialized || !this.enabled || !this.nosGain) return;
+      const targetVol = active ? 0.22 : 0;
+      this.nosGain.gain.setTargetAtTime(targetVol, this.ctx.currentTime, 0.06);
+    }
+
+    playCrash(intensity = 1.0) {
+      if (!this.initialized || !this.enabled || !this.ctx) return;
+      try {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.22);
+
+        gain.gain.setValueAtTime(Math.min(0.45, intensity * 0.4), this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.25);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.26);
+      } catch (e) {}
+    }
+
+    playBeep(freq = 600, duration = 0.08) {
+      if (!this.initialized || !this.enabled || !this.ctx) return;
+      try {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        gain.gain.setValueAtTime(0.18, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    toggle() {
+      this.enabled = !this.enabled;
+      if (!this.enabled && this.engineGain) {
+        this.engineGain.gain.setValueAtTime(0, this.ctx.currentTime);
+        this.skidGain.gain.setValueAtTime(0, this.ctx.currentTime);
+        this.nosGain.gain.setValueAtTime(0, this.ctx.currentTime);
+      }
+      return this.enabled;
+    }
+  }
+
+  // ==========================================
+  // 2. DATA MODELS: 6 CARS & 6 TUNING PARTS
+  // ==========================================
+  const CAR_MODELS = [
+    {
+      id: 'hatchback_ae',
+      name: 'AE-Sprinter',
+      classType: 'Class C // Hatchback',
+      price: 0,
+      baseSpeed: 175,
+      baseAccel: 6.2,
+      baseGrip: 1.15,
+      baseWeight: 1020,
+      color: '#00f3ff',
+      length: 36,
+      width: 18,
+      bodyStyle: 'hatch',
+      desc: '경량 핫해치. 민첩한 회두성과 뛰어난 코너링으로 초보자에게 최적인 스타터 머신.'
+    },
+    {
+      id: 'coupe_silvia',
+      name: 'Silvia-K2',
+      classType: 'Class B // Street Coupe',
+      price: 18000,
+      baseSpeed: 205,
+      baseAccel: 5.4,
+      baseGrip: 1.25,
+      baseWeight: 1180,
+      color: '#ff0055',
+      length: 40,
+      width: 19,
+      bodyStyle: 'coupe',
+      desc: 'FR 구동계의 드리프트 전설. 핸드브레이크 파워 슬라이드와 각도 유지가 탁월함.'
+    },
+    {
+      id: 'muscle_v8',
+      name: 'Muscle-V8 Thunder',
+      classType: 'Class B // Classic Muscle',
+      price: 32000,
+      baseSpeed: 228,
+      baseAccel: 4.6,
+      baseGrip: 1.12,
+      baseWeight: 1480,
+      color: '#ffe600',
+      length: 44,
+      width: 21,
+      bodyStyle: 'muscle',
+      desc: '압도적인 V8 슈퍼차저 토크. 직선 주로를 찢어발기며 강력한 오버스티어를 분출함.'
+    },
+    {
+      id: 'rotary_apex',
+      name: 'Rotary-Apex RX',
+      classType: 'Class A // Rotary Sports',
+      price: 52000,
+      baseSpeed: 245,
+      baseAccel: 4.1,
+      baseGrip: 1.38,
+      baseWeight: 1150,
+      color: '#00ff88',
+      length: 41,
+      width: 20,
+      bodyStyle: 'rotary',
+      desc: '9000 RPM 고회전 트윈 로터리. 면도날 같은 에이펙스 공략과 부드러운 하이스피드 드리프트.'
+    },
+    {
+      id: 'tuner_awd',
+      name: 'Shadow-R AWD',
+      classType: 'Class S // AWD Tuner',
+      price: 85000,
+      baseSpeed: 268,
+      baseAccel: 3.4,
+      baseGrip: 1.55,
+      baseWeight: 1360,
+      color: '#9d00ff',
+      length: 43,
+      width: 20,
+      bodyStyle: 'tuner',
+      desc: '전자제어 4륜 트랙션의 괴물. 어떤 악천후 코너에서도 로켓처럼 튀어나가는 언더그라운드 챔피언.'
+    },
+    {
+      id: 'hyper_phantom',
+      name: 'Phantom-GT Midship',
+      classType: 'Class SS // Hyper Apex',
+      price: 150000,
+      baseSpeed: 305,
+      baseAccel: 2.8,
+      baseGrip: 1.72,
+      baseWeight: 1120,
+      color: '#ffffff',
+      length: 46,
+      width: 22,
+      bodyStyle: 'hyper',
+      desc: '미드십 트윈터보 하이퍼카. 공기역학적 다운포스와 극한의 한계 그립을 가진 궁극의 머신.'
+    }
+  ];
+
+  const TUNING_CATEGORIES = [
+    {
+      id: 'engine',
+      name: '엔진 블록 & ECU (Engine Output)',
+      desc: '최고 속도 및 고회전 파워 증강',
+      statEffect: '+Top Speed, +RPM Range',
+      baseCost: 2500,
+      costMult: 2.1
+    },
+    {
+      id: 'turbo',
+      name: '트윈 터보차저 (Forced Induction)',
+      desc: '가속 토크 증대 및 부스트 스풀 단축',
+      statEffect: '+Acceleration Torque',
+      baseCost: 3200,
+      costMult: 2.2
+    },
+    {
+      id: 'tires',
+      name: '레이싱 컴파운드 타이어 (Tires & Suspension)',
+      desc: '코너링 횡그립 향상 및 한계 드리프트 제어',
+      statEffect: '+Lateral Grip, +Drift Stability',
+      baseCost: 2200,
+      costMult: 1.9
+    },
+    {
+      id: 'brakes',
+      name: '카본 세라믹 브레이크 (Braking System)',
+      desc: '급제동력 향상 및 핸드브레이크 턴 반응도 개선',
+      statEffect: '+Braking Force, +Handbrake Lock',
+      baseCost: 1800,
+      costMult: 1.8
+    },
+    {
+      id: 'chassis',
+      name: '경량 카본 섀시 & 바디킷 (Lightweight Body)',
+      desc: '총 중량 감소로 가속 및 조향 민첩성 극대화',
+      statEffect: '-Chassis Weight, +Agility',
+      baseCost: 3500,
+      costMult: 2.3
+    },
+    {
+      id: 'nos',
+      name: 'NOS 액화 니트로 키트 (Nitrous System)',
+      desc: '부스터 용량 확장 및 폭발적인 추진 압력',
+      statEffect: '+NOS Capacity, +Boost Thrust',
+      baseCost: 2800,
+      costMult: 2.0
+    }
+  ];
+
+  const NEON_PALETTE = [
+    '#00f3ff', '#ff0055', '#ffe600', '#00ff88', '#9d00ff', '#ffffff', '#ff6600', '#0044ff'
+  ];
+
+  // ==========================================
+  // 3. 4 LEAGUES & 12 CIRCUITS DEFINITION
+  // ==========================================
+  const LEAGUES = [
+    { id: 0, name: '루키 컵 (Rookie Cup)', desc: '지하 레이싱의 기본기를 다지는 신인 리그' },
+    { id: 1, name: '클럽맨 컵 (Clubman Cup)', desc: '고가도로와 연속 시케인이 도사리는 중급 리그' },
+    { id: 2, name: '나이트 스트리트 (Night Street)', desc: '초고속과 급제동 헤어핀이 공존하는 도심 결전' },
+    { id: 3, name: '그랜드 마스터 (Grand Master)', desc: '궁극의 실력자들만 생존하는 전설의 리그' }
+  ];
+
+  const CIRCUITS = [
+    // League 0: Rookie Cup
+    {
+      id: 0, league: 0, name: 'Neon Docks', laps: 3, roadWidth: 150,
+      desc: '부둣가 공터에 마련된 고속 타원 및 기초 헤어핀 코스',
+      prize: 3500,
+      points: [
+        {x: 400, y: 700}, {x: 1200, y: 700}, {x: 1600, y: 900}, {x: 1800, y: 1300},
+        {x: 1500, y: 1700}, {x: 800, y: 1700}, {x: 300, y: 1400}, {x: 200, y: 1000}
+      ]
+    },
+    {
+      id: 1, league: 0, name: 'Industrial Alley', laps: 3, roadWidth: 140,
+      desc: '공장 지대의 연속 90도 직각 코너와 가드레일',
+      prize: 4500,
+      points: [
+        {x: 500, y: 500}, {x: 1500, y: 500}, {x: 1500, y: 1200}, {x: 1900, y: 1200},
+        {x: 1900, y: 1900}, {x: 900, y: 1900}, {x: 900, y: 1300}, {x: 500, y: 1300}
+      ]
+    },
+    {
+      id: 2, league: 0, name: 'Harbor Sprint', laps: 3, roadWidth: 140,
+      desc: '긴 바닷바람 직선로와 급격한 S자 시케인 감속 구간',
+      prize: 6000,
+      points: [
+        {x: 300, y: 600}, {x: 1800, y: 600}, {x: 2100, y: 1000}, {x: 1700, y: 1200},
+        {x: 1900, y: 1500}, {x: 1500, y: 1800}, {x: 600, y: 1700}, {x: 300, y: 1100}
+      ]
+    },
+
+    // League 1: Clubman Cup
+    {
+      id: 3, league: 1, name: 'Riverside Loop', laps: 3, roadWidth: 135,
+      desc: '강변을 끼고 돌아가는 롱 헤어핀과 기술적 코너',
+      prize: 9000,
+      points: [
+        {x: 600, y: 600}, {x: 1600, y: 600}, {x: 2000, y: 900}, {x: 1800, y: 1400},
+        {x: 1200, y: 1300}, {x: 1400, y: 1800}, {x: 600, y: 1800}, {x: 300, y: 1200}
+      ]
+    },
+    {
+      id: 4, league: 1, name: 'Expressway Junction', laps: 3, roadWidth: 135,
+      desc: '복잡한 고가도로 분기점. 슬립스트림 추월이 승부처',
+      prize: 11000,
+      points: [
+        {x: 400, y: 800}, {x: 1000, y: 400}, {x: 1800, y: 400}, {x: 2000, y: 1000},
+        {x: 1600, y: 1500}, {x: 1000, y: 1200}, {x: 600, y: 1700}, {x: 200, y: 1300}
+      ]
+    },
+    {
+      id: 5, league: 1, name: 'Chinatown Chicanes', laps: 3, roadWidth: 130,
+      desc: '좁은 골목길 사이로 홍등이 빛나는 3연속 시케인',
+      prize: 13500,
+      points: [
+        {x: 500, y: 500}, {x: 1200, y: 500}, {x: 1400, y: 800}, {x: 1100, y: 1100},
+        {x: 1600, y: 1400}, {x: 1900, y: 1800}, {x: 800, y: 1900}, {x: 400, y: 1200}
+      ]
+    },
+
+    // League 2: Night Street
+    {
+      id: 6, league: 2, name: 'Neo Shinjuku Strip', laps: 3, roadWidth: 130,
+      desc: '거대한 네온 빌딩 숲. 300km/h 직선 직후의 극한 헤어핀',
+      prize: 18000,
+      points: [
+        {x: 300, y: 400}, {x: 2200, y: 400}, {x: 2300, y: 900}, {x: 1800, y: 1100},
+        {x: 2200, y: 1600}, {x: 1400, y: 1800}, {x: 800, y: 1300}, {x: 300, y: 1000}
+      ]
+    },
+    {
+      id: 7, league: 2, name: 'Cyber Tunnel Run', laps: 3, roadWidth: 125,
+      desc: '인공 지하 터널 속 블라인드 코너와 뱅크 구간',
+      prize: 22000,
+      points: [
+        {x: 500, y: 600}, {x: 1300, y: 400}, {x: 2100, y: 700}, {x: 1900, y: 1300},
+        {x: 1500, y: 1100}, {x: 1300, y: 1700}, {x: 700, y: 1800}, {x: 300, y: 1200}
+      ]
+    },
+    {
+      id: 8, league: 2, name: 'Midnight Skyline', laps: 3, roadWidth: 125,
+      desc: '해안 고속도로와 도심 외곽을 잇는 테크니컬 드리프트 코스',
+      prize: 27000,
+      points: [
+        {x: 400, y: 500}, {x: 1700, y: 500}, {x: 1900, y: 900}, {x: 1300, y: 1000},
+        {x: 1700, y: 1400}, {x: 2200, y: 1800}, {x: 1100, y: 2000}, {x: 300, y: 1300}
+      ]
+    },
+
+    // League 3: Grand Master
+    {
+      id: 9, league: 3, name: 'Apex International Ring', laps: 3, roadWidth: 120,
+      desc: '모든 레이싱 기술의 정수를 요구하는 종합 그랑프리 서킷',
+      prize: 35000,
+      points: [
+        {x: 600, y: 500}, {x: 1800, y: 500}, {x: 2300, y: 800}, {x: 2000, y: 1200},
+        {x: 2300, y: 1600}, {x: 1600, y: 1900}, {x: 1200, y: 1500}, {x: 700, y: 1800},
+        {x: 300, y: 1100}
+      ]
+    },
+    {
+      id: 10, league: 3, name: "Devil's Hairpin Pass", laps: 3, roadWidth: 115,
+      desc: '숨 쉴 틈 없이 몰아치는 5연속 헤어핀. 완벽한 카운터스티어 필수',
+      prize: 45000,
+      points: [
+        {x: 400, y: 500}, {x: 1200, y: 500}, {x: 800, y: 850}, {x: 1600, y: 850},
+        {x: 1200, y: 1200}, {x: 2000, y: 1200}, {x: 1600, y: 1600}, {x: 2200, y: 1900},
+        {x: 600, y: 2000}, {x: 300, y: 1200}
+      ]
+    },
+    {
+      id: 11, league: 3, name: 'Underground Grand Finale', laps: 3, roadWidth: 120,
+      desc: '최대 전장, 최강의 라이벌들이 결집하는 전설의 최종 결전지',
+      prize: 60000,
+      points: [
+        {x: 500, y: 400}, {x: 2200, y: 400}, {x: 2400, y: 1000}, {x: 1800, y: 1100},
+        {x: 2300, y: 1500}, {x: 1900, y: 1900}, {x: 1400, y: 1600}, {x: 1100, y: 2100},
+        {x: 500, y: 1800}, {x: 200, y: 1100}
+      ]
+    }
+  ];
+
+  // Sponsor Bounty Missions
+  const BOUNTIES = [
+    {
+      id: 'bounty_drift_1',
+      title: '스모크 킹 (Smoke King)',
+      desc: '한 레이스에서 총 드리프트 점수 3,500점 이상 달성',
+      reward: 12000,
+      type: 'drift',
+      target: 3500,
+      completed: false
+    },
+    {
+      id: 'bounty_clean_win',
+      title: '고스트 드라이버 (Ghost Driver)',
+      desc: '벽 충돌 3회 이하로 레이스 1위 우승',
+      reward: 15000,
+      type: 'clean_win',
+      target: 3,
+      completed: false
+    },
+    {
+      id: 'bounty_drag_fast',
+      title: '쿼터마일 데몬 (Quarter-Mile Demon)',
+      desc: '드래그 레이스 1/4마일 11.5초 이하 기록 달성',
+      reward: 18000,
+      type: 'drag_time',
+      target: 11.5,
+      completed: false
+    },
+    {
+      id: 'bounty_grandmaster',
+      title: '언더그라운드 레전드 (Apex Legend)',
+      desc: '그랜드 마스터 리그 서킷 1회 이상 우승',
+      reward: 50000,
+      type: 'league_win',
+      target: 3,
+      completed: false
+    }
+  ];
+
+  // ==========================================
+  // 4. PERSISTENT SAVE MANAGER (LOCALSTORAGE)
+  // ==========================================
+  class SaveManager {
+    static STORAGE_KEY = 'NEON_DRIFT_SAVE_V2';
+
+    static getDefaultData() {
+      return {
+        credits: 12000,
+        currentCarId: 'hatchback_ae',
+        ownedCars: ['hatchback_ae'],
+        carColors: {
+          hatchback_ae: '#00f3ff'
+        },
+        carTunings: {
+          hatchback_ae: { engine: 0, turbo: 0, tires: 0, brakes: 0, chassis: 0, nos: 0 }
+        },
+        unlockedLeagues: [0],
+        circuitStars: {},
+        circuitBestLaps: {},
+        bounties: BOUNTIES.map(b => ({ id: b.id, completed: false })),
+        dragBestTime: null
+      };
+    }
+
+    static load() {
+      try {
+        const raw = localStorage.getItem(SaveManager.STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          return Object.assign(SaveManager.getDefaultData(), parsed);
+        }
+      } catch (e) {
+        console.warn('Save load error, using defaults:', e);
+      }
+      return SaveManager.getDefaultData();
+    }
+
+    static save(data) {
+      try {
+        localStorage.setItem(SaveManager.STORAGE_KEY, JSON.stringify(data));
+      } catch (e) {
+        console.warn('Save write error:', e);
+      }
+    }
+
+    static reset() {
+      localStorage.removeItem(SaveManager.STORAGE_KEY);
+      return SaveManager.getDefaultData();
+    }
+  }
+
+  // ==========================================
+  // 5. 2D VEHICLE PHYSICS SIMULATION (CAR CLASS)
+  // ==========================================
+  class Car {
+    constructor(config, isPlayer = false) {
+      this.config = config;
+      this.isPlayer = isPlayer;
+      this.id = config.id;
+      this.name = config.name;
+      this.color = config.color || '#00f3ff';
+      this.bodyStyle = config.bodyStyle || 'coupe';
+
+      // Transform & Kinematics
+      this.x = 0;
+      this.y = 0;
+      this.heading = 0;
+      this.vx = 0;
+      this.vy = 0;
+      this.angularVelocity = 0;
+
+      // Base specs
+      this.topSpeed = config.baseSpeed;
+      this.accelPower = 2600 / config.baseAccel;
+      this.lateralGrip = config.baseGrip * 9.8;
+      this.mass = config.baseWeight;
+      this.length = config.length || 40;
+      this.width = config.width || 20;
+
+      // Steering
+      this.steerAngle = 0;
+      this.maxSteerAngle = 0.58;
+
+      // Drift & Slip
+      this.slipAngle = 0;
+      this.isDrifting = false;
+      this.driftScore = 0;
+      this.driftMultiplier = 1.0;
+      this.driftDuration = 0;
+
+      // NOS Booster
+      this.nosCapacity = 100;
+      this.nosCurrent = 100;
+      this.nosActive = false;
+
+      // Checkpoint & Laps
+      this.lap = 1;
+      this.currentWaypointIdx = 0;
+      this.passedHalfway = false;
+      this.lapStartTime = 0;
+      this.bestLapTime = Infinity;
+      this.totalRaceTime = 0;
+      this.wallHits = 0;
+      this.distanceAlongTrack = 0;
+
+      // AI attributes
+      this.aiAggression = 0.88 + Math.random() * 0.25;
+      this.aiDesiredOffset = (Math.random() - 0.5) * 45;
+    }
+
+    applyTunings(tunings) {
+      if (!tunings) return;
+      const { engine = 0, turbo = 0, tires = 0, brakes = 0, chassis = 0, nos = 0 } = tunings;
+      this.topSpeed = this.config.baseSpeed + engine * 12;
+      this.accelPower = (2600 / this.config.baseAccel) * (1 + turbo * 0.14);
+      this.lateralGrip = (this.config.baseGrip * 9.8) * (1 + tires * 0.08);
+      this.mass = this.config.baseWeight * (1 - chassis * 0.04);
+      this.brakePower = 1.0 + brakes * 0.15;
+      this.nosCapacity = 100 + nos * 25;
+      this.nosCurrent = this.nosCapacity;
+    }
+
+    update(dt, input, circuit) {
+      let throttle = input.throttle || 0;
+      let brake = input.brake || 0;
+      let steer = input.steer || 0;
+      let handbrake = input.handbrake || false;
+      let nos = input.nos || false;
+
+      // 1. NOS Booster Handling
+      if (nos && this.nosCurrent > 0 && throttle > 0.1) {
+        this.nosActive = true;
+        this.nosCurrent = Math.max(0, this.nosCurrent - 36 * dt);
+        throttle *= 1.48;
+      } else {
+        this.nosActive = false;
+        if (this.isDrifting) {
+          this.nosCurrent = Math.min(this.nosCapacity, this.nosCurrent + 16 * dt);
+        }
+      }
+
+      // 2. Smooth Steering Angle
+      const steerSpeed = 4.8;
+      this.steerAngle += (steer * this.maxSteerAngle - this.steerAngle) * steerSpeed * dt;
+
+      // 3. Current Body Velocities
+      const cosH = Math.cos(this.heading);
+      const sinH = Math.sin(this.heading);
+      const vForward = this.vx * cosH + this.vy * sinH;
+      const vLateral = -this.vx * sinH + this.vy * cosH;
+      const speedMagnitude = Math.hypot(this.vx, this.vy);
+      const speedKmh = speedMagnitude * 3.6;
+
+      // 4. Longitudinal Drive & Brake Forces
+      let fDrive = 0;
+      const maxSpeedMs = (this.topSpeed * (this.nosActive ? 1.20 : 1.0)) / 3.6;
+
+      if (throttle > 0) {
+        const speedRatio = Math.min(1.0, vForward / maxSpeedMs);
+        const engineTorque = this.accelPower * (1.0 - 0.72 * speedRatio);
+        fDrive += engineTorque * throttle;
+      }
+      if (brake > 0) {
+        if (vForward > 1.0) {
+          fDrive -= 1250 * (this.brakePower || 1.0) * brake;
+        } else if (vForward < -1.0) {
+          fDrive += 1250 * (this.brakePower || 1.0) * brake;
+        } else {
+          fDrive -= 480 * brake;
+        }
+      }
+      // Drag and rolling resistance
+      fDrive -= (0.42 * vForward * Math.abs(vForward) + 16.0 * vForward);
+
+      // 5. Lateral Grip Force (Pacejka-inspired lateral tire friction)
+      let gripCoeff = this.lateralGrip * 3.6;
+      if (handbrake) {
+        gripCoeff *= 0.22; // rear breaks traction
+      }
+      let fLateral = -vLateral * gripCoeff;
+      const maxLateralGrip = (this.mass * 0.045) * 9.8 * (handbrake ? 0.38 : 1.25);
+      fLateral = Math.max(-maxLateralGrip, Math.min(maxLateralGrip, fLateral));
+
+      // 6. World Acceleration Integration
+      const ax = (fDrive * cosH - fLateral * sinH) / (this.mass * 0.045);
+      const ay = (fDrive * sinH + fLateral * cosH) / (this.mass * 0.045);
+
+      this.vx += ax * dt;
+      this.vy += ay * dt;
+      this.x += this.vx * dt;
+      this.y += this.vy * dt;
+
+      // 7. Yaw Rotation (Bicycle model steer + oversteer inertia)
+      const wheelbase = this.length * 0.75;
+      let targetYawRate = (vForward / wheelbase) * Math.sin(this.steerAngle);
+      if (handbrake && speedKmh > 20) {
+        targetYawRate += (steer !== 0 ? steer * 2.8 : (vLateral > 0 ? 1.8 : -1.8));
+      }
+      this.angularVelocity += (targetYawRate - this.angularVelocity) * 11.0 * dt;
+      this.heading += this.angularVelocity * dt;
+
+      // 8. Drift Detection & Scoring
+      if (speedMagnitude > 5.0) {
+        const velocityAngle = Math.atan2(this.vy, this.vx);
+        let angleDiff = Math.abs(velocityAngle - this.heading);
+        while (angleDiff > Math.PI) angleDiff = Math.abs(angleDiff - Math.PI * 2);
+
+        this.slipAngle = angleDiff;
+        if (this.slipAngle > 0.22 && speedKmh > 20) {
+          this.isDrifting = true;
+          this.driftDuration += dt;
+          this.driftMultiplier = Math.min(4.0, 1.0 + this.driftDuration * 0.6);
+          const ptsThisFrame = (this.slipAngle * 120 * (speedKmh / 40)) * this.driftMultiplier * dt;
+          this.driftScore += ptsThisFrame;
+        } else {
+          this.isDrifting = false;
+          this.driftDuration = Math.max(0, this.driftDuration - dt * 2);
+        }
+      } else {
+        this.isDrifting = false;
+        this.driftDuration = 0;
+        this.slipAngle = 0;
+      }
+
+      // Track Wall Collision & Waypoint Progression
+      if (circuit) {
+        return this.checkCircuitBounds(circuit, dt);
+      }
+      return false;
+    }
+
+    checkCircuitBounds(circuit, dt) {
+      const points = circuit.points;
+      let minDistSq = Infinity;
+      let closestSegmentIdx = 0;
+      let closestProj = { x: 0, y: 0 };
+
+      for (let i = 0; i < points.length; i++) {
+        const p1 = points[i];
+        const p2 = points[(i + 1) % points.length];
+        const proj = projectPointToSegment(this.x, this.y, p1.x, p1.y, p2.x, p2.y);
+        const distSq = (this.x - proj.x) ** 2 + (this.y - proj.y) ** 2;
+        if (distSq < minDistSq) {
+          minDistSq = distSq;
+          closestSegmentIdx = i;
+          closestProj = proj;
+        }
+      }
+
+      const dist = Math.sqrt(minDistSq);
+      const halfTrack = circuit.roadWidth * 0.5;
+
+      this.currentWaypointIdx = closestSegmentIdx;
+      // Mark halfway point to prevent false lap triggers
+      if (closestSegmentIdx >= Math.floor(points.length * 0.5)) {
+        this.passedHalfway = true;
+      }
+
+      this.distanceAlongTrack = (this.lap - 1) * points.length * 1000 + closestSegmentIdx * 1000 + dist;
+
+      // Guardrail Collision
+      if (dist > halfTrack) {
+        const penetration = dist - halfTrack;
+        const normX = (this.x - closestProj.x) / (dist || 1);
+        const normY = (this.y - closestProj.y) / (dist || 1);
+
+        this.x -= normX * penetration;
+        this.y -= normY * penetration;
+
+        const dot = this.vx * normX + this.vy * normY;
+        if (dot > 0) {
+          this.vx -= 1.4 * dot * normX;
+          this.vy -= 1.4 * dot * normY;
+          this.vx *= 0.65;
+          this.vy *= 0.65;
+          this.wallHits++;
+          return true;
+        }
+      }
+      return false;
+    }
+
+    getSpeedKmh() {
+      return Math.round(Math.hypot(this.vx, this.vy) * 3.6);
+    }
+  }
+
+  function projectPointToSegment(px, py, x1, y1, x2, y2) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const lenSq = dx * dx + dy * dy;
+    if (lenSq === 0) return { x: x1, y: y1 };
+    let t = ((px - x1) * dx + (py - y1) * dy) / lenSq;
+    t = Math.max(0, Math.min(1, t));
+    return { x: x1 + t * dx, y: y1 + t * dy };
+  }
+
+  // ==========================================
+  // 6. INTELLIGENT AI RACER CONTROLLER
+  // ==========================================
+  class AIController {
+    constructor(car, circuit, rivalIndex = 0) {
+      this.car = car;
+      this.circuit = circuit;
+      this.rivalIndex = rivalIndex;
+      this.targetWaypoint = 0;
+      this.lookaheadDist = 180 + rivalIndex * 15;
+    }
+
+    update(dt, otherCars) {
+      const points = this.circuit.points;
+      const car = this.car;
+
+      let closestIdx = 0;
+      let minDist = Infinity;
+      for (let i = 0; i < points.length; i++) {
+        const d = Math.hypot(car.x - points[i].x, car.y - points[i].y);
+        if (d < minDist) {
+          minDist = d;
+          closestIdx = i;
+        }
+      }
+
+      const targetIdx = (closestIdx + 1) % points.length;
+      const nextTargetIdx = (closestIdx + 2) % points.length;
+      const targetPoint = points[targetIdx];
+      const nextPoint = points[nextTargetIdx];
+
+      const offsetX = Math.cos(car.heading + Math.PI / 2) * car.aiDesiredOffset;
+      const offsetY = Math.sin(car.heading + Math.PI / 2) * car.aiDesiredOffset;
+
+      const tx = targetPoint.x + offsetX;
+      const ty = targetPoint.y + offsetY;
+
+      // Steering
+      const angleToTarget = Math.atan2(ty - car.y, tx - car.x);
+      let steerDiff = angleToTarget - car.heading;
+      while (steerDiff > Math.PI) steerDiff -= Math.PI * 2;
+      while (steerDiff < -Math.PI) steerDiff += Math.PI * 2;
+
+      let steerInput = Math.max(-1, Math.min(1, steerDiff * 2.8));
+
+      // Speed regulation & Cornering
+      const seg1Angle = Math.atan2(targetPoint.y - points[closestIdx].y, targetPoint.x - points[closestIdx].x);
+      const seg2Angle = Math.atan2(nextPoint.y - targetPoint.y, nextPoint.x - targetPoint.x);
+      let turnCornerAngle = Math.abs(seg2Angle - seg1Angle);
+      while (turnCornerAngle > Math.PI) turnCornerAngle = Math.abs(turnCornerAngle - Math.PI * 2);
+
+      const currentSpeed = car.getSpeedKmh();
+      let throttleInput = 1.0;
+      let brakeInput = 0;
+      let handbrakeInput = false;
+
+      let targetCornerSpeed = car.topSpeed * 0.85;
+      if (turnCornerAngle > 0.8) {
+        targetCornerSpeed = car.topSpeed * 0.48;
+      } else if (turnCornerAngle > 0.4) {
+        targetCornerSpeed = car.topSpeed * 0.65;
+      }
+
+      if (currentSpeed > targetCornerSpeed) {
+        throttleInput = 0.2;
+        brakeInput = Math.min(1.0, (currentSpeed - targetCornerSpeed) / 25);
+        if (turnCornerAngle > 0.9 && currentSpeed > 75) {
+          handbrakeInput = true;
+        }
+      }
+
+      // Avoidance & Slipstream
+      for (const other of otherCars) {
+        if (other === car) continue;
+        const dx = other.x - car.x;
+        const dy = other.y - car.y;
+        const dist = Math.hypot(dx, dy);
+
+        const forwardDot = (dx * Math.cos(car.heading) + dy * Math.sin(car.heading)) / (dist || 1);
+        if (dist < 140 && forwardDot > 0.7) {
+          if (dist < 55) {
+            steerInput += (dx > 0 ? -0.4 : 0.4);
+            brakeInput = Math.max(brakeInput, 0.3);
+          }
+        }
+      }
+
+      let nosInput = false;
+      if (turnCornerAngle < 0.25 && currentSpeed > car.topSpeed * 0.7 && car.nosCurrent > 30) {
+        nosInput = true;
+      }
+
+      return {
+        throttle: throttleInput,
+        brake: brakeInput,
+        steer: steerInput,
+        handbrake: handbrakeInput,
+        nos: nosInput
+      };
+    }
+  }
+
+  // ==========================================
+  // 7. PARTICLE SYSTEM & PERMANENT SKIDMARKS
+  // ==========================================
+  class ParticleSystem {
+    constructor() {
+      this.particles = [];
+    }
+
+    spawnSparks(x, y, count = 12) {
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 40 + Math.random() * 160;
+        this.particles.push({
+          x, y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          color: Math.random() > 0.5 ? '#00f3ff' : '#ffe600',
+          size: 2 + Math.random() * 3,
+          life: 0.25 + Math.random() * 0.3,
+          maxLife: 0.55
+        });
+      }
+    }
+
+    spawnDriftSmoke(x, y, vx, vy) {
+      this.particles.push({
+        x: x + (Math.random() - 0.5) * 8,
+        y: y + (Math.random() - 0.5) * 8,
+        vx: vx * 0.2 + (Math.random() - 0.5) * 20,
+        vy: vy * 0.2 + (Math.random() - 0.5) * 20,
+        color: 'rgba(180, 200, 230, 0.4)',
+        size: 6 + Math.random() * 8,
+        growth: 24,
+        life: 0.4 + Math.random() * 0.3,
+        maxLife: 0.7
+      });
+    }
+
+    spawnNosFlame(x, y, heading) {
+      const backAngle = heading + Math.PI + (Math.random() - 0.5) * 0.35;
+      const speed = 120 + Math.random() * 80;
+      this.particles.push({
+        x, y,
+        vx: Math.cos(backAngle) * speed,
+        vy: Math.sin(backAngle) * speed,
+        color: Math.random() > 0.4 ? '#00f3ff' : '#9d00ff',
+        size: 4 + Math.random() * 4,
+        growth: -3,
+        life: 0.15 + Math.random() * 0.1,
+        maxLife: 0.25
+      });
+    }
+
+    update(dt) {
+      for (let i = this.particles.length - 1; i >= 0; i--) {
+        const p = this.particles[i];
+        p.life -= dt;
+        if (p.life <= 0) {
+          this.particles.splice(i, 1);
+          continue;
+        }
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        if (p.growth) p.size += p.growth * dt;
+      }
+    }
+
+    draw(ctx) {
+      for (const p of this.particles) {
+        const alpha = Math.max(0, p.life / p.maxLife);
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, Math.max(1, p.size), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+  }
+
+  // ==========================================
+  // 8. DRAG RACING STRIP MINI-GAME CONTROLLER
+  // ==========================================
+  class DragRaceController {
+    constructor(soundEngine) {
+      this.sound = soundEngine;
+      this.active = false;
+      this.rpm = 1000;
+      this.maxRpm = 9500;
+      this.gear = 1;
+      this.maxGears = 5;
+      this.speed = 0;
+      this.distance = 0;
+      this.timer = 0;
+      this.rivalSpeed = 0;
+      this.rivalDistance = 0;
+      this.finished = false;
+      this.greenMinRpm = 6800;
+      this.greenMaxRpm = 7600;
+      this.gearRatios = [3.8, 2.5, 1.8, 1.3, 1.0];
+      this.feedbackText = 'READY...';
+      this.feedbackClass = '';
+      this.zeroToHundredTime = null;
+    }
+
+    start(car) {
+      this.car = car;
+      const accelPower = (car && car.accelPower) ? car.accelPower : (2600 / ((car && car.baseAccel) || 5.0));
+      const mass = (car && car.mass) ? car.mass : ((car && car.baseWeight) || 1200);
+      this.engineTorque = accelPower * 1.5;
+      this.massFactor = mass * 0.045;
+
+      this.active = true;
+      this.rpm = 1500;
+      this.gear = 1;
+      this.speed = 0;
+      this.distance = 0;
+      this.timer = 0;
+      this.rivalSpeed = 0;
+      this.rivalDistance = 0;
+      this.finished = false;
+      this.zeroToHundredTime = null;
+      this.feedbackText = 'LAUNCH!';
+      this.feedbackClass = 'good';
+      if (this.sound) this.sound.playBeep(880, 0.15);
+    }
+
+    shift() {
+      if (!this.active || this.finished) return;
+
+      if (this.rpm >= this.greenMinRpm && this.rpm <= this.greenMaxRpm) {
+        this.feedbackText = 'PERFECT SHIFT! +BOOST';
+        this.feedbackClass = 'perfect';
+        this.speed *= 1.08;
+        if (this.sound) this.sound.playBeep(1200, 0.12);
+      } else if (this.rpm > this.greenMaxRpm) {
+        this.feedbackText = 'OVER-REV! LATE';
+        this.feedbackClass = 'late';
+        this.speed *= 0.94;
+        if (this.sound) this.sound.playBeep(350, 0.15);
+      } else if (this.rpm > 5000) {
+        this.feedbackText = 'GOOD SHIFT';
+        this.feedbackClass = 'good';
+      } else {
+        this.feedbackText = 'TOO EARLY!';
+        this.feedbackClass = 'early';
+        this.speed *= 0.88;
+      }
+
+      if (this.gear < this.maxGears) {
+        this.gear++;
+        this.rpm = Math.max(2200, this.rpm * 0.62);
+      }
+    }
+
+    update(dt) {
+      if (!this.active || this.finished) return;
+      this.timer += dt;
+
+      const ratio = this.gearRatios[this.gear - 1];
+      const accel = (this.engineTorque * ratio) / this.massFactor;
+
+      this.speed += accel * dt;
+      this.distance += this.speed * dt;
+
+      if (this.speed >= 27.78 && this.zeroToHundredTime === null) {
+        this.zeroToHundredTime = this.timer;
+      }
+
+      this.rpm = 1200 + (this.speed * 85 * ratio);
+      if (this.rpm > this.maxRpm) {
+        this.rpm = this.maxRpm - (Math.random() * 150);
+      }
+
+      const rivalAccel = 9.8 + (this.timer * 1.5);
+      this.rivalSpeed += rivalAccel * dt;
+      this.rivalDistance += this.rivalSpeed * dt;
+
+      if (this.distance >= 402) {
+        this.finished = true;
+        this.active = false;
+        const won = this.distance >= this.rivalDistance;
+        return {
+          won,
+          time: this.timer,
+          zeroToHundred: this.zeroToHundredTime || this.timer,
+          topSpeedKmh: Math.round(this.speed * 3.6)
+        };
+      }
+      return null;
+    }
+
+    drawTachometer(canvas) {
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      const cx = w / 2;
+      const cy = h / 2;
+      const r = w * 0.42;
+
+      ctx.clearRect(0, 0, w, h);
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0.75 * Math.PI, 2.25 * Math.PI);
+      ctx.lineWidth = 14;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.stroke();
+
+      const startGreenAngle = 0.75 * Math.PI + (this.greenMinRpm / this.maxRpm) * (1.5 * Math.PI);
+      const endGreenAngle = 0.75 * Math.PI + (this.greenMaxRpm / this.maxRpm) * (1.5 * Math.PI);
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, startGreenAngle, endGreenAngle);
+      ctx.lineWidth = 16;
+      ctx.strokeStyle = '#00ff88';
+      ctx.shadowColor = '#00ff88';
+      ctx.shadowBlur = 12;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      const redlineAngle = 0.75 * Math.PI + (8200 / this.maxRpm) * (1.5 * Math.PI);
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, redlineAngle, 2.25 * Math.PI);
+      ctx.lineWidth = 16;
+      ctx.strokeStyle = '#ff0055';
+      ctx.stroke();
+
+      for (let i = 0; i <= 9; i++) {
+        const frac = i / 9;
+        const angle = 0.75 * Math.PI + frac * (1.5 * Math.PI);
+        const tx1 = cx + Math.cos(angle) * (r - 18);
+        const ty1 = cy + Math.sin(angle) * (r - 18);
+        const tx2 = cx + Math.cos(angle) * (r - 6);
+        const ty2 = cy + Math.sin(angle) * (r - 6);
+
+        ctx.beginPath();
+        ctx.moveTo(tx1, ty1);
+        ctx.lineTo(tx2, ty2);
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
+
+        const numX = cx + Math.cos(angle) * (r - 34);
+        const numY = cy + Math.sin(angle) * (r - 34);
+        ctx.font = 'bold 14px monospace';
+        ctx.fillStyle = '#8c9cb8';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(i, numX, numY);
+      }
+
+      const needleAngle = 0.75 * Math.PI + (Math.min(this.rpm, this.maxRpm) / this.maxRpm) * (1.5 * Math.PI);
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(needleAngle) * (r - 10), cy + Math.sin(needleAngle) * (r - 10));
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = '#00f3ff';
+      ctx.shadowColor = '#00f3ff';
+      ctx.shadowBlur = 15;
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+      ctx.fillStyle = '#16203c';
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#00f3ff';
+      ctx.stroke();
+
+      ctx.font = '900 24px monospace';
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${Math.round(this.speed * 3.6)} KM/H`, cx, cy + 45);
+    }
+  }
+
+  // ==========================================
+  // 9. MAIN GAME ORCHESTRATOR & UI ENGINE
+  // ==========================================
+  class NeonDriftGame {
+    constructor() {
+      this.canvas = document.getElementById('game-canvas');
+      this.ctx = this.canvas.getContext('2d');
+      this.sound = new SoundEngine();
+      this.saveData = SaveManager.load();
+      this.particles = new ParticleSystem();
+      this.dragRace = new DragRaceController(this.sound);
+
+      // Offscreen Skidmarks Surface
+      this.skidCanvas = document.createElement('canvas');
+      this.skidCtx = this.skidCanvas.getContext('2d');
+
+      // State & Entities
+      this.gameState = 'menu';
+      this.currentCircuit = CIRCUITS[0];
+      this.playerCar = null;
+      this.aiCars = [];
+      this.aiControllers = [];
+      this.camera = { x: 0, y: 0, zoom: 1.0 };
+
+      // Inputs state
+      this.keys = {
+        w: false, s: false, a: false, d: false,
+        space: false, shift: false, esc: false
+      };
+
+      // Race management
+      this.raceStartTime = 0;
+      this.raceTimer = 0;
+      this.raceFinished = false;
+      this.previewCarIdx = 0;
+
+      this.initDisplay();
+      this.initEvents();
+      this.initUI();
+      this.startLoop();
+    }
+
+    initDisplay() {
+      const resize = () => {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        this.skidCanvas.width = 3200;
+        this.skidCanvas.height = 3200;
+      };
+      window.addEventListener('resize', resize);
+      resize();
+    }
+
+    initEvents() {
+      window.addEventListener('keydown', (e) => {
+        this.sound.init();
+        const k = e.key.toLowerCase();
+        if (k === 'w' || k === 'arrowup') this.keys.w = true;
+        if (k === 's' || k === 'arrowdown') this.keys.s = true;
+        if (k === 'a' || k === 'arrowleft') this.keys.a = true;
+        if (k === 'd' || k === 'arrowright') this.keys.d = true;
+        if (k === ' ' || e.code === 'Space') {
+          this.keys.space = true;
+          if (this.gameState === 'drag') {
+            if (!this.dragRace.active) {
+              const activeCarCfg = CAR_MODELS.find(c => c.id === this.saveData.currentCarId) || CAR_MODELS[0];
+              this.dragRace.start(activeCarCfg);
+              document.getElementById('btn-drag-shift').disabled = false;
+            } else {
+              this.dragRace.shift();
+            }
+          }
+        }
+        if (k === 'shift' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
+          this.keys.shift = true;
+          if (this.gameState === 'drag') this.dragRace.shift();
+        }
+        if (k === 'escape') {
+          if (this.gameState === 'race') this.pauseRace();
+          else if (this.gameState === 'pause') this.resumeRace();
+        }
+      });
+
+      window.addEventListener('keyup', (e) => {
+        const k = e.key.toLowerCase();
+        if (k === 'w' || k === 'arrowup') this.keys.w = false;
+        if (k === 's' || k === 'arrowdown') this.keys.s = false;
+        if (k === 'a' || k === 'arrowleft') this.keys.a = false;
+        if (k === 'd' || k === 'arrowright') this.keys.d = false;
+        if (k === ' ' || e.code === 'Space') this.keys.space = false;
+        if (k === 'shift' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') this.keys.shift = false;
+      });
+
+      // Virtual Touch Controls
+      const bindTouch = (id, keyName) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('touchstart', (e) => {
+          e.preventDefault();
+          this.sound.init();
+          this.keys[keyName] = true;
+        }, { passive: false });
+        el.addEventListener('touchend', (e) => {
+          e.preventDefault();
+          this.keys[keyName] = false;
+        }, { passive: false });
+      };
+
+      bindTouch('touch-left', 'a');
+      bindTouch('touch-right', 'd');
+      bindTouch('touch-gas', 'w');
+      bindTouch('touch-brake', 's');
+      bindTouch('touch-handbrake', 'space');
+    }
+
+    initUI() {
+      this.updateCreditsDisplays();
+
+      // Menu Buttons
+      document.getElementById('btn-menu-career').onclick = () => this.showScreen('career');
+      document.getElementById('btn-menu-garage').onclick = () => this.showScreen('garage');
+      document.getElementById('btn-menu-drag').onclick = () => this.showScreen('drag');
+      document.getElementById('btn-menu-bounties').onclick = () => this.showScreen('bounties');
+
+      document.getElementById('btn-audio-toggle').onclick = (e) => {
+        const enabled = this.sound.toggle();
+        e.target.textContent = enabled ? '🔊 오디오 ON' : '🔈 오디오 OFF';
+      };
+
+      document.getElementById('btn-data-reset').onclick = () => {
+        if (confirm('모든 커리어 진행도 및 차고 튜닝을 초기화하시겠습니까?')) {
+          this.saveData = SaveManager.reset();
+          this.updateCreditsDisplays();
+          this.renderGarageShowcase();
+          alert('데이터가 초기화되었습니다.');
+        }
+      };
+
+      // Back Buttons
+      document.getElementById('btn-career-back').onclick = () => this.showScreen('menu');
+      document.getElementById('btn-garage-back').onclick = () => this.showScreen('menu');
+      document.getElementById('btn-drag-back').onclick = () => this.showScreen('menu');
+      document.getElementById('btn-bounties-back').onclick = () => this.showScreen('menu');
+
+      // Pause Buttons
+      document.getElementById('btn-pause-resume').onclick = () => this.resumeRace();
+      document.getElementById('btn-pause-restart').onclick = () => this.startRace(this.currentCircuit);
+      document.getElementById('btn-pause-quit').onclick = () => this.showScreen('career');
+
+      // Result Buttons
+      document.getElementById('btn-result-retry').onclick = () => this.startRace(this.currentCircuit);
+      document.getElementById('btn-result-continue').onclick = () => this.showScreen('career');
+
+      // Drag Screen Buttons
+      document.getElementById('btn-drag-start').onclick = () => {
+        const activeCarCfg = CAR_MODELS.find(c => c.id === this.saveData.currentCarId) || CAR_MODELS[0];
+        this.dragRace.start(activeCarCfg);
+        document.getElementById('btn-drag-shift').disabled = false;
+      };
+      document.getElementById('btn-drag-shift').onclick = () => {
+        this.dragRace.shift();
+      };
+
+      // League Tabs
+      document.querySelectorAll('.league-tab-btn').forEach(btn => {
+        btn.onclick = (e) => {
+          document.querySelectorAll('.league-tab-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          this.renderCircuitCards(parseInt(btn.dataset.league, 10));
+        };
+      });
+
+      // Garage Navigation & Actions
+      document.getElementById('btn-car-prev').onclick = () => {
+        this.previewCarIdx = (this.previewCarIdx - 1 + CAR_MODELS.length) % CAR_MODELS.length;
+        this.renderGarageShowcase();
+      };
+      document.getElementById('btn-car-next').onclick = () => {
+        this.previewCarIdx = (this.previewCarIdx + 1) % CAR_MODELS.length;
+        this.renderGarageShowcase();
+      };
+
+      document.getElementById('btn-car-action').onclick = () => {
+        const car = CAR_MODELS[this.previewCarIdx];
+        const owned = this.saveData.ownedCars.includes(car.id);
+        if (owned) {
+          this.saveData.currentCarId = car.id;
+          SaveManager.save(this.saveData);
+          this.renderGarageShowcase();
+        } else {
+          if (this.saveData.credits >= car.price) {
+            this.saveData.credits -= car.price;
+            this.saveData.ownedCars.push(car.id);
+            this.saveData.currentCarId = car.id;
+            if (!this.saveData.carTunings[car.id]) {
+              this.saveData.carTunings[car.id] = { engine: 0, turbo: 0, tires: 0, brakes: 0, chassis: 0, nos: 0 };
+            }
+            SaveManager.save(this.saveData);
+            this.updateCreditsDisplays();
+            this.renderGarageShowcase();
+            if (this.sound) this.sound.playBeep(950, 0.2);
+          } else {
+            alert('상금이 부족합니다!');
+          }
+        }
+      };
+
+      // Garage Colors
+      const colorContainer = document.getElementById('color-swatches-container');
+      colorContainer.innerHTML = '';
+      NEON_PALETTE.forEach(c => {
+        const swatch = document.createElement('div');
+        swatch.className = 'color-swatch';
+        swatch.style.backgroundColor = c;
+        swatch.onclick = () => {
+          const activeCarId = CAR_MODELS[this.previewCarIdx].id;
+          this.saveData.carColors[activeCarId] = c;
+          SaveManager.save(this.saveData);
+          this.renderGarageShowcase();
+        };
+        colorContainer.appendChild(swatch);
+      });
+
+      this.renderCircuitCards(0);
+      this.renderGarageShowcase();
+      this.renderBountiesList();
+    }
+
+    updateCreditsDisplays() {
+      const cr = (this.saveData.credits || 0).toLocaleString();
+      document.getElementById('menu-credits-val').textContent = cr;
+      document.querySelectorAll('.player-credits-val').forEach(el => el.textContent = cr);
+    }
+
+    showScreen(screenName) {
+      this.gameState = screenName;
+      const screens = ['menu', 'career', 'garage', 'drag', 'bounties', 'race-hud', 'result', 'pause'];
+      screens.forEach(s => {
+        const el = document.getElementById(`${s}-screen`) || document.getElementById(s);
+        if (el) el.classList.add('hidden');
+      });
+
+      if (screenName === 'race') {
+        document.getElementById('race-hud').classList.remove('hidden');
+      } else {
+        const target = document.getElementById(`${screenName}-screen`);
+        if (target) target.classList.remove('hidden');
+      }
+
+      this.updateCreditsDisplays();
+      if (screenName === 'garage') this.renderGarageShowcase();
+      if (screenName === 'bounties') this.renderBountiesList();
+    }
+
+    renderCircuitCards(leagueId) {
+      const container = document.getElementById('circuit-grid-container');
+      container.innerHTML = '';
+
+      const leagueCircuits = CIRCUITS.filter(c => c.league === leagueId);
+      const isLeagueUnlocked = this.saveData.unlockedLeagues.includes(leagueId);
+
+      leagueCircuits.forEach((circ) => {
+        const card = document.createElement('div');
+        const stars = this.saveData.circuitStars[circ.id] || 0;
+        const bestLap = this.saveData.circuitBestLaps[circ.id];
+        const isLocked = !isLeagueUnlocked;
+
+        card.className = `circuit-card ${isLocked ? 'locked' : ''}`;
+        card.innerHTML = `
+          <div class="circuit-header">
+            <div class="circuit-title">${circ.name}</div>
+            <div class="circuit-stars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</div>
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted);">${circ.desc}</div>
+          <div class="circuit-preview-box">
+            <canvas width="220" height="90" id="circ-mini-${circ.id}"></canvas>
+          </div>
+          <div class="circuit-meta">
+            <span>우승 상금: <b style="color: var(--neon-yellow);">${circ.prize.toLocaleString()} CR</b></span>
+            <span>최고 기록: <b>${bestLap ? bestLap.toFixed(2) + 's' : '--'}</b></span>
+          </div>
+          <button class="btn btn-small btn-green btn-start-race" style="margin-top: 6px;" ${isLocked ? 'disabled' : ''}>
+            ${isLocked ? '🔒 잠김' : '서킷 레이스 시작'}
+          </button>
+        `;
+
+        if (!isLocked) {
+          card.querySelector('.btn-start-race').onclick = () => this.startRace(circ);
+        }
+        container.appendChild(card);
+
+        setTimeout(() => {
+          const miniCanvas = document.getElementById(`circ-mini-${circ.id}`);
+          if (miniCanvas) this.drawCircuitMinimap(miniCanvas, circ);
+        }, 10);
+      });
+    }
+
+    drawCircuitMinimap(canvas, circuit, carPositions = null) {
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      const pts = circuit.points;
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      pts.forEach(p => {
+        if (p.x < minX) minX = p.x;
+        if (p.x > maxX) maxX = p.x;
+        if (p.y < minY) minY = p.y;
+        if (p.y > maxY) maxY = p.y;
+      });
+
+      const pad = 12;
+      const scale = Math.min((w - pad * 2) / (maxX - minX || 1), (h - pad * 2) / (maxY - minY || 1));
+
+      // Track ribbon
+      ctx.beginPath();
+      pts.forEach((p, idx) => {
+        const sx = pad + (p.x - minX) * scale;
+        const sy = pad + (p.y - minY) * scale;
+        if (idx === 0) ctx.moveTo(sx, sy);
+        else ctx.lineTo(sx, sy);
+      });
+      ctx.closePath();
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = '#00f3ff';
+      ctx.shadowColor = '#00f3ff';
+      ctx.shadowBlur = 6;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Draw car dots on live minimap
+      if (carPositions) {
+        for (const c of carPositions) {
+          const cx = pad + (c.x - minX) * scale;
+          const cy = pad + (c.y - minY) * scale;
+          ctx.beginPath();
+          ctx.arc(cx, cy, c.isPlayer ? 4.5 : 3.2, 0, Math.PI * 2);
+          ctx.fillStyle = c.color;
+          ctx.shadowColor = c.color;
+          ctx.shadowBlur = c.isPlayer ? 8 : 4;
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+      }
+    }
+
+    renderGarageShowcase() {
+      const car = CAR_MODELS[this.previewCarIdx];
+      const owned = this.saveData.ownedCars.includes(car.id);
+      const isSelected = this.saveData.currentCarId === car.id;
+      const carColor = this.saveData.carColors[car.id] || car.color;
+
+      document.getElementById('garage-car-name').textContent = car.name;
+      document.getElementById('garage-car-class').textContent = car.classType;
+
+      const actionBtn = document.getElementById('btn-car-action');
+      if (isSelected) {
+        actionBtn.textContent = '현재 탑승 중 (Active)';
+        actionBtn.className = 'btn btn-green';
+        actionBtn.disabled = true;
+      } else if (owned) {
+        actionBtn.textContent = '이 머신 선택하기 (Select)';
+        actionBtn.className = 'btn btn-green';
+        actionBtn.disabled = false;
+      } else {
+        actionBtn.textContent = `머신 구매 (${car.price.toLocaleString()} CR)`;
+        actionBtn.className = 'btn btn-pink';
+        actionBtn.disabled = this.saveData.credits < car.price;
+      }
+
+      const tunings = this.saveData.carTunings[car.id] || { engine: 0, turbo: 0, tires: 0, brakes: 0, chassis: 0, nos: 0 };
+      const speedCalc = car.baseSpeed + tunings.engine * 12;
+      const accelCalc = (car.baseAccel / (1 + tunings.turbo * 0.12)).toFixed(1);
+      const weightCalc = Math.round(car.baseWeight * (1 - tunings.chassis * 0.04));
+
+      document.getElementById('stat-val-speed').textContent = `${speedCalc} km/h`;
+      document.getElementById('stat-bar-speed').style.width = `${Math.min(100, (speedCalc / 320) * 100)}%`;
+
+      document.getElementById('stat-val-accel').textContent = `${accelCalc}s`;
+      document.getElementById('stat-bar-accel').style.width = `${Math.min(100, ((7 - accelCalc) / 4.5) * 100)}%`;
+
+      document.getElementById('stat-bar-grip').style.width = `${Math.min(100, ((car.baseGrip + tunings.tires * 0.1) / 2.0) * 100)}%`;
+      document.getElementById('stat-val-weight').textContent = `${weightCalc} kg`;
+      document.getElementById('stat-bar-weight').style.width = `${Math.min(100, (1600 - weightCalc) / 8)}%`;
+
+      const previewCanvas = document.getElementById('car-preview-canvas');
+      const pctx = previewCanvas.getContext('2d');
+      pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+
+      pctx.save();
+      pctx.translate(previewCanvas.width / 2, previewCanvas.height / 2);
+      this.drawCarSprite(pctx, {
+        color: carColor,
+        length: car.length * 2.0,
+        width: car.width * 2.0,
+        steerAngle: 0.22,
+        bodyStyle: car.bodyStyle
+      });
+      pctx.restore();
+
+      const tuningContainer = document.getElementById('tuning-parts-container');
+      tuningContainer.innerHTML = '';
+
+      TUNING_CATEGORIES.forEach(cat => {
+        const tier = tunings[cat.id] || 0;
+        const maxTier = 5;
+        const nextCost = Math.round(cat.baseCost * Math.pow(cat.costMult, tier));
+        const isMax = tier >= maxTier;
+
+        const card = document.createElement('div');
+        card.className = 'part-card';
+
+        let pipsHtml = '';
+        for (let i = 1; i <= maxTier; i++) {
+          pipsHtml += `<div class="pip ${i <= tier ? 'filled' : ''}"></div>`;
+        }
+
+        card.innerHTML = `
+          <div class="part-details">
+            <div class="part-name">${cat.name}</div>
+            <div class="part-tier-pips">${pipsHtml}</div>
+            <div class="part-effect">${cat.statEffect}</div>
+          </div>
+          <div>
+            <button class="btn btn-small ${isMax ? '' : 'btn-green'} btn-upgrade" ${isMax || !owned || this.saveData.credits < nextCost ? 'disabled' : ''}>
+              ${isMax ? 'MAX TIER' : `Lv.${tier + 1} (${nextCost.toLocaleString()} CR)`}
+            </button>
+          </div>
+        `;
+
+        if (!isMax && owned) {
+          card.querySelector('.btn-upgrade').onclick = () => {
+            if (this.saveData.credits >= nextCost) {
+              this.saveData.credits -= nextCost;
+              tunings[cat.id] = tier + 1;
+              this.saveData.carTunings[car.id] = tunings;
+              SaveManager.save(this.saveData);
+              this.updateCreditsDisplays();
+              this.renderGarageShowcase();
+              if (this.sound) this.sound.playBeep(1100, 0.15);
+            }
+          };
+        }
+        tuningContainer.appendChild(card);
+      });
+    }
+
+    renderBountiesList() {
+      const container = document.getElementById('bounties-list-container');
+      container.innerHTML = '';
+
+      BOUNTIES.forEach(b => {
+        const savedBounty = this.saveData.bounties.find(sb => sb.id === b.id);
+        const isDone = savedBounty ? savedBounty.completed : false;
+
+        const item = document.createElement('div');
+        item.className = 'part-card';
+        item.style.borderColor = isDone ? 'var(--neon-green)' : 'rgba(255, 255, 255, 0.1)';
+        item.innerHTML = `
+          <div>
+            <div style="font-size: 16px; font-weight: 800; color: ${isDone ? 'var(--neon-green)' : '#fff'};">${b.title}</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">${b.desc}</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 15px; font-weight: 900; color: var(--neon-yellow);">${b.reward.toLocaleString()} CR</div>
+            <div style="font-size: 12px; font-weight: 700; color: ${isDone ? 'var(--neon-green)' : 'var(--neon-cyan)'}; margin-top: 4px;">
+              ${isDone ? '✓ 계약 완료 (Claimed)' : '진행 중 (In Progress)'}
+            </div>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    // ==========================================
+    // 10. CIRCUIT RACE LIFECYCLE
+    // ==========================================
+    startRace(circuit) {
+      this.currentCircuit = circuit;
+      this.skidCtx.clearRect(0, 0, this.skidCanvas.width, this.skidCanvas.height);
+
+      const carId = this.saveData.currentCarId || 'hatchback_ae';
+      const carConfig = CAR_MODELS.find(c => c.id === carId) || CAR_MODELS[0];
+      this.playerCar = new Car(carConfig, true);
+      this.playerCar.color = this.saveData.carColors[carId] || carConfig.color;
+      this.playerCar.applyTunings(this.saveData.carTunings[carId]);
+
+      const p1 = circuit.points[0];
+      const p2 = circuit.points[1];
+      const startAngle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+
+      this.playerCar.x = p1.x;
+      this.playerCar.y = p1.y;
+      this.playerCar.heading = startAngle;
+
+      this.aiCars = [];
+      this.aiControllers = [];
+      const rivalNames = ['Akira // S15', 'Viper // Muscle', 'Ren // Rotary'];
+      const rivalCars = [CAR_MODELS[1], CAR_MODELS[2], CAR_MODELS[3]];
+
+      for (let i = 0; i < 3; i++) {
+        const rCarCfg = rivalCars[i % rivalCars.length];
+        const aiCar = new Car(rCarCfg, false);
+        aiCar.name = rivalNames[i];
+        aiCar.color = rCarCfg.color;
+
+        const gridOffset = (i + 1) * 45;
+        aiCar.x = p1.x - Math.cos(startAngle) * gridOffset + (i % 2 === 0 ? 25 : -25) * Math.sin(startAngle);
+        aiCar.y = p1.y - Math.sin(startAngle) * gridOffset - (i % 2 === 0 ? 25 : -25) * Math.cos(startAngle);
+        aiCar.heading = startAngle;
+
+        this.aiCars.push(aiCar);
+        this.aiControllers.push(new AIController(aiCar, circuit, i));
+      }
+
+      this.raceStartTime = performance.now();
+      this.raceTimer = 0;
+      this.raceFinished = false;
+      this.playerCar.lap = 1;
+      this.playerCar.passedHalfway = false;
+      this.playerCar.lapStartTime = performance.now();
+      this.playerCar.driftScore = 0;
+      this.playerCar.wallHits = 0;
+
+      this.showScreen('race');
+      if (this.sound) this.sound.playBeep(440, 0.3);
+    }
+
+    pauseRace() {
+      this.gameState = 'pause';
+      document.getElementById('pause-screen').classList.remove('hidden');
+    }
+
+    resumeRace() {
+      this.gameState = 'race';
+      document.getElementById('pause-screen').classList.add('hidden');
+    }
+
+    finishRace(playerWon) {
+      if (this.raceFinished) return;
+      this.raceFinished = true;
+      this.sound.updateEngine(0, false, false);
+
+      const totalTime = this.raceTimer;
+      const bestLap = this.playerCar.bestLapTime === Infinity ? totalTime / 3 : this.playerCar.bestLapTime;
+      const driftPoints = Math.round(this.playerCar.driftScore);
+
+      const allCars = [this.playerCar, ...this.aiCars];
+      allCars.sort((a, b) => b.distanceAlongTrack - a.distanceAlongTrack);
+      const playerPos = allCars.indexOf(this.playerCar) + 1;
+
+      const prizeBase = this.currentCircuit.prize;
+      let prizeWon = 0;
+      if (playerPos === 1) prizeWon = prizeBase;
+      else if (playerPos === 2) prizeWon = Math.round(prizeBase * 0.6);
+      else if (playerPos === 3) prizeWon = Math.round(prizeBase * 0.35);
+      else prizeWon = Math.round(prizeBase * 0.15);
+
+      const driftBonus = Math.min(10000, Math.round(driftPoints * 1.5));
+      const totalReward = prizeWon + driftBonus;
+
+      this.saveData.credits += totalReward;
+      const curStars = this.saveData.circuitStars[this.currentCircuit.id] || 0;
+      const earnedStars = Math.max(curStars, playerPos === 1 ? 3 : (playerPos === 2 ? 2 : 1));
+      this.saveData.circuitStars[this.currentCircuit.id] = earnedStars;
+
+      const nextLeague = this.currentCircuit.league + 1;
+      if (playerPos === 1 && nextLeague < 4 && !this.saveData.unlockedLeagues.includes(nextLeague)) {
+        this.saveData.unlockedLeagues.push(nextLeague);
+      }
+
+      this.checkBountyCompletion(driftPoints, this.playerCar.wallHits, playerPos);
+
+      const prevBest = this.saveData.circuitBestLaps[this.currentCircuit.id] || Infinity;
+      if (bestLap < prevBest) {
+        this.saveData.circuitBestLaps[this.currentCircuit.id] = bestLap;
+      }
+
+      SaveManager.save(this.saveData);
+
+      document.getElementById('result-circuit-name').textContent = `${this.currentCircuit.name} (Laps: ${this.currentCircuit.laps})`;
+      document.getElementById('res-pos-val').textContent = `${playerPos}위 (${playerPos === 1 ? '우승!' : '완주'})`;
+      document.getElementById('res-pos-val').style.color = playerPos === 1 ? 'var(--neon-yellow)' : 'var(--neon-cyan)';
+      document.getElementById('res-time-val').textContent = this.formatTime(totalTime);
+      document.getElementById('res-bestlap-val').textContent = `${bestLap.toFixed(2)}s`;
+      document.getElementById('res-drift-val').textContent = `${driftPoints.toLocaleString()} PTS (+${driftBonus} CR)`;
+      document.getElementById('res-reward-val').textContent = `+${totalReward.toLocaleString()} CR`;
+
+      this.showScreen('result');
+      if (this.sound) this.sound.playBeep(playerPos === 1 ? 1200 : 600, 0.4);
+    }
+
+    checkBountyCompletion(driftPts, wallHits, pos) {
+      this.saveData.bounties.forEach(sb => {
+        if (sb.completed) return;
+        const meta = BOUNTIES.find(b => b.id === sb.id);
+        if (!meta) return;
+
+        let pass = false;
+        if (meta.type === 'drift' && driftPts >= meta.target) pass = true;
+        if (meta.type === 'clean_win' && pos === 1 && wallHits <= meta.target) pass = true;
+        if (meta.type === 'league_win' && pos === 1 && this.currentCircuit.league >= meta.target) pass = true;
+
+        if (pass) {
+          sb.completed = true;
+          this.saveData.credits += meta.reward;
+        }
+      });
+    }
+
+    formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = (seconds % 60).toFixed(2);
+      return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+
+    // ==========================================
+    // 11. MAIN GAME LOOP
+    // ==========================================
+    startLoop() {
+      let lastTime = performance.now();
+
+      const loop = (currentTime) => {
+        const dt = Math.min(0.08, (currentTime - lastTime) / 1000);
+        lastTime = currentTime;
+
+        if (this.gameState === 'race') {
+          this.updateRace(dt);
+          this.renderRace();
+        } else if (this.gameState === 'drag') {
+          this.updateDrag(dt);
+        }
+
+        requestAnimationFrame(loop);
+      };
+      requestAnimationFrame(loop);
+    }
+
+    updateRace(dt) {
+      this.raceTimer += dt;
+
+      // 1. Update Player Car
+      const playerInput = {
+        throttle: this.keys.w ? 1 : 0,
+        brake: this.keys.s ? 1 : 0,
+        steer: (this.keys.d ? 1 : 0) - (this.keys.a ? 1 : 0),
+        handbrake: this.keys.space,
+        nos: this.keys.shift
+      };
+
+      const hitWall = this.playerCar.update(dt, playerInput, this.currentCircuit);
+      if (hitWall) {
+        this.particles.spawnSparks(this.playerCar.x, this.playerCar.y, 14);
+        this.sound.playCrash(0.8);
+      }
+
+      // Check Slipstream between player and AI cars
+      let inSlipstream = false;
+      for (const ai of this.aiCars) {
+        const dx = ai.x - this.playerCar.x;
+        const dy = ai.y - this.playerCar.y;
+        const dist = Math.hypot(dx, dy);
+        const headingDot = (dx * Math.cos(this.playerCar.heading) + dy * Math.sin(this.playerCar.heading)) / (dist || 1);
+
+        if (dist < 130 && headingDot > 0.82) {
+          inSlipstream = true;
+          this.playerCar.vx *= 1.002;
+          this.playerCar.vy *= 1.002;
+        }
+      }
+
+      // 2. Update AI Rivals
+      const allCars = [this.playerCar, ...this.aiCars];
+      for (let i = 0; i < this.aiCars.length; i++) {
+        const ai = this.aiCars[i];
+        const aiCtrl = this.aiControllers[i];
+        const aiInput = aiCtrl.update(dt, allCars);
+        ai.update(dt, aiInput, this.currentCircuit);
+
+        if (ai.passedHalfway && ai.currentWaypointIdx === 0) {
+          ai.lap++;
+          ai.passedHalfway = false;
+        }
+      }
+
+      // 3. Lap Progression Detection (passed halfway + crossed line)
+      if (this.playerCar.passedHalfway && this.playerCar.currentWaypointIdx === 0) {
+        const lapTime = (performance.now() - this.playerCar.lapStartTime) / 1000;
+        if (lapTime < this.playerCar.bestLapTime) {
+          this.playerCar.bestLapTime = lapTime;
+        }
+        this.playerCar.lap++;
+        this.playerCar.passedHalfway = false;
+        this.playerCar.lapStartTime = performance.now();
+
+        if (this.playerCar.lap > this.currentCircuit.laps) {
+          this.finishRace(true);
+        }
+      }
+
+      // 4. Update Audio Engine
+      const speedKmh = this.playerCar.getSpeedKmh();
+      const rpmRatio = Math.min(1.0, speedKmh / this.playerCar.topSpeed);
+      this.sound.updateEngine(rpmRatio, this.keys.w, true);
+      this.sound.updateSkid(this.playerCar.isDrifting ? this.playerCar.slipAngle * 2.0 : 0);
+      this.sound.updateNos(this.playerCar.nosActive);
+
+      // 5. Draw Skidmarks & Particles
+      if (this.playerCar.isDrifting || this.playerCar.nosActive) {
+        this.drawTireSkidmarks(this.playerCar);
+        this.particles.spawnDriftSmoke(this.playerCar.x, this.playerCar.y, this.playerCar.vx, this.playerCar.vy);
+      }
+      if (this.playerCar.nosActive) {
+        this.particles.spawnNosFlame(this.playerCar.x, this.playerCar.y, this.playerCar.heading);
+      }
+
+      this.particles.update(dt);
+
+      // 6. Camera Smooth Follow (Lerp)
+      const targetCamX = this.playerCar.x;
+      const targetCamY = this.playerCar.y;
+      this.camera.x += (targetCamX - this.camera.x) * 6.0 * dt;
+      this.camera.y += (targetCamY - this.camera.y) * 6.0 * dt;
+
+      // 7. Update Race HUD & Live Minimap
+      this.updateRaceHUD(inSlipstream);
+    }
+
+    updateRaceHUD(inSlipstream) {
+      document.getElementById('hud-speed-val').textContent = this.playerCar.getSpeedKmh();
+      document.getElementById('hud-lap-val').textContent = `${Math.min(this.currentCircuit.laps, this.playerCar.lap)} / ${this.currentCircuit.laps}`;
+      document.getElementById('hud-time-val').textContent = this.formatTime(this.raceTimer);
+
+      const allCars = [this.playerCar, ...this.aiCars];
+      allCars.sort((a, b) => b.distanceAlongTrack - a.distanceAlongTrack);
+      const pos = allCars.indexOf(this.playerCar) + 1;
+      document.getElementById('hud-pos-val').textContent = pos;
+
+      const speedRatio = this.playerCar.getSpeedKmh() / this.playerCar.topSpeed;
+      const gearNum = Math.min(6, Math.max(1, Math.floor(speedRatio * 5) + 1));
+      document.getElementById('hud-gear-val').textContent = `${gearNum} GEAR`;
+
+      const nosPct = (this.playerCar.nosCurrent / this.playerCar.nosCapacity) * 100;
+      document.getElementById('hud-nos-bar').style.height = `${nosPct}%`;
+
+      const driftAlert = document.getElementById('drift-alert-box');
+      if (this.playerCar.isDrifting) {
+        driftAlert.classList.remove('hidden');
+        document.getElementById('drift-score-text').textContent = `+${Math.round(this.playerCar.driftScore)}`;
+        document.getElementById('drift-mult-text').textContent = `DRIFT x${this.playerCar.driftMultiplier.toFixed(1)}`;
+      } else {
+        driftAlert.classList.add('hidden');
+      }
+
+      const slipAlert = document.getElementById('slipstream-alert-box');
+      if (inSlipstream) slipAlert.classList.remove('hidden');
+      else slipAlert.classList.add('hidden');
+
+      // Update Live HUD Minimap
+      const miniCanvas = document.getElementById('hud-minimap-canvas');
+      if (miniCanvas) {
+        const positions = [
+          { x: this.playerCar.x, y: this.playerCar.y, color: '#00f3ff', isPlayer: true },
+          ...this.aiCars.map(ai => ({ x: ai.x, y: ai.y, color: '#ff0055', isPlayer: false }))
+        ];
+        this.drawCircuitMinimap(miniCanvas, this.currentCircuit, positions);
+      }
+    }
+
+    drawTireSkidmarks(car) {
+      const ctx = this.skidCtx;
+      const cosH = Math.cos(car.heading);
+      const sinH = Math.sin(car.heading);
+
+      const rearDist = car.length * 0.4;
+      const trackWidth = car.width * 0.45;
+
+      const rlx = car.x - cosH * rearDist - sinH * trackWidth;
+      const rly = car.y - sinH * rearDist + cosH * trackWidth;
+      const rrx = car.x - cosH * rearDist + sinH * trackWidth;
+      const rry = car.y - sinH * rearDist - cosH * trackWidth;
+
+      ctx.save();
+      ctx.fillStyle = 'rgba(10, 12, 18, 0.28)';
+      ctx.beginPath();
+      ctx.arc(rlx, rly, 3.2, 0, Math.PI * 2);
+      ctx.arc(rrx, rry, 3.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    renderRace() {
+      const ctx = this.ctx;
+      const w = this.canvas.width;
+      const h = this.canvas.height;
+
+      ctx.clearRect(0, 0, w, h);
+
+      ctx.save();
+      ctx.translate(w / 2, h / 2);
+      ctx.translate(-this.camera.x, -this.camera.y);
+
+      // 1. Draw Asphalt Circuit Base & Guardrails
+      this.drawCircuitTrack(ctx, this.currentCircuit);
+
+      // 2. Draw Permanent Skid Marks Surface
+      ctx.drawImage(this.skidCanvas, 0, 0);
+
+      // 3. Draw AI Rival Cars
+      for (const ai of this.aiCars) {
+        ctx.save();
+        ctx.translate(ai.x, ai.y);
+        ctx.rotate(ai.heading);
+        this.drawCarSprite(ctx, ai);
+        ctx.restore();
+      }
+
+      // 4. Draw Player Car
+      ctx.save();
+      ctx.translate(this.playerCar.x, this.playerCar.y);
+      ctx.rotate(this.playerCar.heading);
+      this.drawCarSprite(ctx, this.playerCar);
+      ctx.restore();
+
+      // 5. Draw Particles
+      this.particles.draw(ctx);
+
+      ctx.restore();
+    }
+
+    drawCircuitTrack(ctx, circuit) {
+      const pts = circuit.points;
+      const roadWidth = circuit.roadWidth;
+
+      ctx.save();
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+
+      // Neon Guardrail glow
+      ctx.beginPath();
+      pts.forEach((p, i) => {
+        if (i === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+      });
+      ctx.closePath();
+
+      ctx.lineWidth = roadWidth + 18;
+      ctx.strokeStyle = '#00f3ff';
+      ctx.shadowColor = '#00f3ff';
+      ctx.shadowBlur = 18;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Asphalt Road
+      ctx.lineWidth = roadWidth;
+      ctx.strokeStyle = '#0c101d';
+      ctx.stroke();
+
+      // Dashed Centerline
+      ctx.beginPath();
+      pts.forEach((p, i) => {
+        if (i === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+      });
+      ctx.closePath();
+      ctx.setLineDash([20, 30]);
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = 'rgba(0, 243, 255, 0.45)';
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Start / Finish Line
+      const p1 = pts[0];
+      const p2 = pts[1];
+      const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+      const nx = -Math.sin(angle);
+      const ny = Math.cos(angle);
+
+      ctx.beginPath();
+      ctx.moveTo(p1.x - nx * roadWidth * 0.5, p1.y - ny * roadWidth * 0.5);
+      ctx.lineTo(p1.x + nx * roadWidth * 0.5, p1.y + ny * roadWidth * 0.5);
+      ctx.lineWidth = 14;
+      ctx.strokeStyle = '#ffffff';
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    drawCarSprite(ctx, car) {
+      const l = car.length;
+      const w = car.width;
+      const style = car.bodyStyle || 'coupe';
+
+      ctx.save();
+
+      // 1. Ground Shadow
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+      ctx.beginPath();
+      ctx.roundRect(-l * 0.5 + 2, -w * 0.5 + 2, l, w, 4);
+      ctx.fill();
+
+      // 2. Headlight Cones
+      ctx.save();
+      const grad = ctx.createRadialGradient(l * 0.5, 0, 5, l * 0.5 + 95, 0, 105);
+      grad.addColorStop(0, 'rgba(0, 243, 255, 0.4)');
+      grad.addColorStop(1, 'rgba(0, 243, 255, 0.0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(l * 0.5, -w * 0.4);
+      ctx.lineTo(l * 0.5 + 115, -w * 1.6);
+      ctx.lineTo(l * 0.5 + 115, w * 1.6);
+      ctx.lineTo(l * 0.5, w * 0.4);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      // 3. Car Body Shell
+      ctx.fillStyle = car.color || '#00f3ff';
+      ctx.beginPath();
+      ctx.roundRect(-l * 0.5, -w * 0.5, l, w, style === 'hatch' ? 3 : 6);
+      ctx.fill();
+
+      // Racing Decal Stripes
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+      ctx.fillRect(-l * 0.45, -w * 0.1, l * 0.9, w * 0.2);
+
+      // Cockpit / Windshield
+      ctx.fillStyle = '#050813';
+      ctx.beginPath();
+      if (style === 'hyper') {
+        ctx.roundRect(-l * 0.05, -w * 0.38, l * 0.4, w * 0.76, 5); // forward cockpit
+      } else {
+        ctx.roundRect(-l * 0.2, -w * 0.35, l * 0.45, w * 0.7, 3);
+      }
+      ctx.fill();
+
+      // Rear Spoiler Wing for Sport/Hyper styles
+      if (style === 'rotary' || style === 'hyper' || style === 'tuner') {
+        ctx.fillStyle = '#111';
+        ctx.fillRect(-l * 0.54, -w * 0.45, 4, w * 0.9);
+      }
+
+      // Front Steered Wheels
+      const steer = car.steerAngle || 0;
+      ctx.fillStyle = '#151515';
+
+      ctx.save();
+      ctx.translate(l * 0.3, -w * 0.48);
+      ctx.rotate(steer);
+      ctx.fillRect(-5, -2.5, 10, 5);
+      ctx.restore();
+
+      ctx.save();
+      ctx.translate(l * 0.3, w * 0.48);
+      ctx.rotate(steer);
+      ctx.fillRect(-5, -2.5, 10, 5);
+      ctx.restore();
+
+      // Rear Wheels
+      ctx.fillRect(-l * 0.35, -w * 0.48, 10, 5);
+      ctx.fillRect(-l * 0.35, w * 0.48, 10, 5);
+
+      // Tail Lights (Neon Pink Glow)
+      ctx.fillStyle = '#ff0055';
+      ctx.shadowColor = '#ff0055';
+      ctx.shadowBlur = 6;
+      ctx.fillRect(-l * 0.5, -w * 0.4, 3, 5);
+      ctx.fillRect(-l * 0.5, w * 0.4 - 5, 3, 5);
+      ctx.shadowBlur = 0;
+
+      ctx.restore();
+    }
+
+    // ==========================================
+    // 12. DRAG RACE UPDATE & TACHO
+    // ==========================================
+    updateDrag(dt) {
+      const res = this.dragRace.update(dt);
+      const tachoCanvas = document.getElementById('drag-tacho-canvas');
+      if (tachoCanvas) this.dragRace.drawTachometer(tachoCanvas);
+
+      document.getElementById('drag-gear-display').textContent = this.dragRace.gear;
+      document.getElementById('drag-dist-display').textContent = `${Math.min(402, Math.round(this.dragRace.distance))} / 402 m`;
+      document.getElementById('drag-time-display').textContent = `${this.dragRace.timer.toFixed(2)} s`;
+
+      const hintEl = document.getElementById('drag-shift-feedback');
+      hintEl.textContent = this.dragRace.feedbackText;
+      hintEl.className = `drag-shift-hint ${this.dragRace.feedbackClass}`;
+
+      const rpmRatio = this.dragRace.rpm / this.dragRace.maxRpm;
+      this.sound.updateEngine(rpmRatio, this.dragRace.active, true);
+
+      if (res) {
+        document.getElementById('btn-drag-shift').disabled = true;
+        const reward = res.won ? 15000 : 3500;
+        this.saveData.credits += reward;
+
+        this.saveData.bounties.forEach(sb => {
+          if (sb.id === 'bounty_drag_fast' && !sb.completed && res.time <= 11.5) {
+            sb.completed = true;
+            this.saveData.credits += 18000;
+          }
+        });
+
+        SaveManager.save(this.saveData);
+        this.updateCreditsDisplays();
+
+        setTimeout(() => {
+          alert(`[1/4마일 결승선 통과!]\n결과: ${res.won ? '🏆 승리 (VICTORY)' : '패배 (DEFEAT)'}\n기록: ${res.time.toFixed(2)}초\n0-100km/h: ${res.zeroToHundred.toFixed(2)}초\n최고속도: ${res.topSpeedKmh} km/h\n상금: +${reward.toLocaleString()} CR`);
+        }, 100);
+      }
+    }
+  }
+
+  // Launch Game on Load
+  window.addEventListener('DOMContentLoaded', () => {
+    window.gameInstance = new NeonDriftGame();
+  });
+  </script>
+</body>
+</html>
