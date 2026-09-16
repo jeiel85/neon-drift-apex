@@ -1634,6 +1634,25 @@
     }
   ];
 
+  // Precalculate track segment metrics for accurate spline projection & progression tracking
+  CIRCUITS.forEach(circuit => {
+    const pts = circuit.points;
+    const segLengths = [];
+    const cumDist = [0];
+    let total = 0;
+    for (let i = 0; i < pts.length; i++) {
+      const p1 = pts[i];
+      const p2 = pts[(i + 1) % pts.length];
+      const len = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+      segLengths.push(len);
+      total += len;
+      if (i < pts.length - 1) cumDist.push(total);
+    }
+    circuit.segLengths = segLengths;
+    circuit.cumDist = cumDist;
+    circuit.totalLength = total;
+  });
+
   // Sponsor Bounty Missions
   const BOUNTIES = [
     {
@@ -1775,7 +1794,12 @@
       // Checkpoint & Laps
       this.lap = 1;
       this.currentWaypointIdx = 0;
-      this.passedHalfway = false;
+      this.lastSegmentIdx = 0;
+      this.checkpointsPassed = new Set();
+      this.hasCrossedStartLine = false;
+      this.finished = false;
+      this.finishOrder = 0;
+      this.finishTime = 0;
       this.lapStartTime = 0;
       this.bestLapTime = Infinity;
       this.totalRaceTime = 0;
@@ -1917,6 +1941,7 @@
       let minDistSq = Infinity;
       let closestSegmentIdx = 0;
       let closestProj = { x: 0, y: 0 };
+      let closestT = 0;
 
       for (let i = 0; i < points.length; i++) {
         const p1 = points[i];
@@ -1927,18 +1952,46 @@
           minDistSq = distSq;
           closestSegmentIdx = i;
           closestProj = proj;
+          closestT = proj.t;
         }
       }
 
       const dist = Math.sqrt(minDistSq);
       const halfTrack = circuit.roadWidth * 0.5;
 
-      this.currentWaypointIdx = closestSegmentIdx;
-      if (closestSegmentIdx >= Math.floor(points.length * 0.5)) {
-        this.passedHalfway = true;
+      if (!this.checkpointsPassed) this.checkpointsPassed = new Set();
+
+      const distInLap = (circuit.cumDist ? circuit.cumDist[closestSegmentIdx] : 0) +
+                        closestT * (circuit.segLengths ? circuit.segLengths[closestSegmentIdx] : 0);
+
+      // Starting grid detection:
+      // When placed behind start line on grid (hasCrossedStartLine === false),
+      // crossing into segment 0 or 1 marks crossing start line
+      if (!this.hasCrossedStartLine) {
+        if (closestSegmentIdx === 0 || closestSegmentIdx === 1) {
+          this.hasCrossedStartLine = true;
+          this.checkpointsPassed.clear();
+          this.checkpointsPassed.add(0);
+        }
       }
 
-      this.distanceAlongTrack = (this.lap - 1) * points.length * 1000 + closestSegmentIdx * 1000 + dist;
+      if (this.hasCrossedStartLine) {
+        this.checkpointsPassed.add(closestSegmentIdx);
+      }
+
+      this.currentWaypointIdx = closestSegmentIdx;
+
+      // Distance along track calculation
+      if (circuit.totalLength) {
+        if (this.finished) {
+          this.distanceAlongTrack = circuit.laps * circuit.totalLength;
+        } else if (!this.hasCrossedStartLine) {
+          const distBehind = circuit.totalLength - distInLap;
+          this.distanceAlongTrack = -distBehind;
+        } else {
+          this.distanceAlongTrack = (this.lap - 1) * circuit.totalLength + distInLap;
+        }
+      }
 
       // Guardrail Collision
       if (dist > halfTrack) {
@@ -1971,10 +2024,10 @@
     const dx = x2 - x1;
     const dy = y2 - y1;
     const lenSq = dx * dx + dy * dy;
-    if (lenSq === 0) return { x: x1, y: y1 };
+    if (lenSq === 0) return { x: x1, y: y1, t: 0 };
     let t = ((px - x1) * dx + (py - y1) * dy) / lenSq;
     t = Math.max(0, Math.min(1, t));
-    return { x: x1 + t * dx, y: y1 + t * dy };
+    return { x: x1 + t * dx, y: y1 + t * dy, t };
   }
 
   // ==========================================
@@ -2356,6 +2409,16 @@
       ctx.textAlign = 'center';
       ctx.fillText(`${Math.round(this.speed * 3.6)} KM/H`, cx, cy + 45);
     }
+  }
+
+  // Live and Final Race Ranking Comparator
+  function compareCars(a, b) {
+    if (a.finished && b.finished) {
+      return a.finishOrder - b.finishOrder;
+    }
+    if (a.finished) return -1;
+    if (b.finished) return 1;
+    return b.distanceAlongTrack - a.distanceAlongTrack;
   }
 
   // ==========================================
@@ -2854,7 +2917,14 @@
       this.playerCar.x = p1.x;
       this.playerCar.y = p1.y;
       this.playerCar.heading = startAngle;
+      this.playerCar.hasCrossedStartLine = true;
+      this.playerCar.lastSegmentIdx = 0;
+      this.playerCar.finished = false;
+      this.playerCar.finishOrder = 0;
+      this.playerCar.finishTime = 0;
+      this.playerCar.checkpointsPassed = new Set([0]);
 
+      this.finishCounter = 0;
       this.aiCars = [];
       this.aiControllers = [];
       const rivalNames = ['Akira // S15', 'Viper // Muscle', 'Ren // Rotary'];
@@ -2870,6 +2940,12 @@
         aiCar.x = p1.x - Math.cos(startAngle) * gridOffset + (i % 2 === 0 ? 25 : -25) * Math.sin(startAngle);
         aiCar.y = p1.y - Math.sin(startAngle) * gridOffset - (i % 2 === 0 ? 25 : -25) * Math.cos(startAngle);
         aiCar.heading = startAngle;
+        aiCar.hasCrossedStartLine = false;
+        aiCar.lastSegmentIdx = circuit.points.length - 1;
+        aiCar.finished = false;
+        aiCar.finishOrder = 0;
+        aiCar.finishTime = 0;
+        aiCar.checkpointsPassed = new Set();
 
         this.aiCars.push(aiCar);
         this.aiControllers.push(new AIController(aiCar, circuit, i));
@@ -2879,7 +2955,6 @@
       this.raceTimer = 0;
       this.raceFinished = false;
       this.playerCar.lap = 1;
-      this.playerCar.passedHalfway = false;
       this.playerCar.lapStartTime = performance.now();
       this.playerCar.driftScore = 0;
       this.playerCar.wallHits = 0;
@@ -2904,11 +2979,11 @@
       this.sound.updateEngine(0, false, false);
 
       const totalTime = this.raceTimer;
-      const bestLap = this.playerCar.bestLapTime === Infinity ? totalTime / 3 : this.playerCar.bestLapTime;
+      const bestLap = this.playerCar.bestLapTime === Infinity ? totalTime / this.currentCircuit.laps : this.playerCar.bestLapTime;
       const driftPoints = Math.round(this.playerCar.driftScore);
 
       const allCars = [this.playerCar, ...this.aiCars];
-      allCars.sort((a, b) => b.distanceAlongTrack - a.distanceAlongTrack);
+      allCars.sort(compareCars);
       const playerPos = allCars.indexOf(this.playerCar) + 1;
 
       const prizeBase = this.currentCircuit.prize;
@@ -3015,6 +3090,7 @@
         this.particles.spawnSparks(this.playerCar.x, this.playerCar.y, 14);
         this.sound.playCrash(0.8);
       }
+      this.updateCarLap(this.playerCar, true);
 
       // Check Slipstream between player and AI cars
       let inSlipstream = false;
@@ -3038,36 +3114,17 @@
         const aiCtrl = this.aiControllers[i];
         const aiInput = aiCtrl.update(dt, allCars);
         ai.update(dt, aiInput, this.currentCircuit);
-
-        if (ai.passedHalfway && ai.currentWaypointIdx === 0) {
-          ai.lap++;
-          ai.passedHalfway = false;
-        }
+        this.updateCarLap(ai, false);
       }
 
-      // 3. Lap Progression Detection (passed halfway + crossed line)
-      if (this.playerCar.passedHalfway && this.playerCar.currentWaypointIdx === 0) {
-        const lapTime = (performance.now() - this.playerCar.lapStartTime) / 1000;
-        if (lapTime < this.playerCar.bestLapTime) {
-          this.playerCar.bestLapTime = lapTime;
-        }
-        this.playerCar.lap++;
-        this.playerCar.passedHalfway = false;
-        this.playerCar.lapStartTime = performance.now();
-
-        if (this.playerCar.lap > this.currentCircuit.laps) {
-          this.finishRace(true);
-        }
-      }
-
-      // 4. Update Audio Engine
+      // 3. Update Audio Engine
       const speedKmh = this.playerCar.getSpeedKmh();
       const rpmRatio = Math.min(1.0, speedKmh / this.playerCar.topSpeed);
       this.sound.updateEngine(rpmRatio, this.keys.w, true);
       this.sound.updateSkid(this.playerCar.isDrifting ? this.playerCar.slipAngle * 2.0 : 0);
       this.sound.updateNos(this.playerCar.nosActive);
 
-      // 5. Draw Skidmarks & Particles
+      // 4. Draw Skidmarks & Particles
       if (this.playerCar.isDrifting || this.playerCar.nosActive) {
         this.drawTireSkidmarks(this.playerCar);
         this.particles.spawnDriftSmoke(this.playerCar.x, this.playerCar.y, this.playerCar.vx, this.playerCar.vy);
@@ -3078,7 +3135,7 @@
 
       this.particles.update(dt);
 
-      // 6. Camera Smooth Follow (Lerp) with Dynamic Zoom & Look-ahead
+      // 5. Camera Smooth Follow (Lerp) with Dynamic Zoom & Look-ahead
       const targetZoom = Math.max(0.70, 1.05 - (speedKmh / 320) * 0.38);
       this.camera.zoom = (this.camera.zoom || 1.0) + (targetZoom - (this.camera.zoom || 1.0)) * 3.5 * dt;
 
@@ -3091,8 +3148,47 @@
       this.camera.x += (targetCamX - this.camera.x) * 6.5 * dt;
       this.camera.y += (targetCamY - this.camera.y) * 6.5 * dt;
 
-      // 7. Update Race HUD & Live Minimap
+      // 6. Update Race HUD & Live Minimap
       this.updateRaceHUD(inSlipstream);
+    }
+
+    updateCarLap(car, isPlayer) {
+      const points = this.currentCircuit.points;
+      const reqCheckpoints = Math.floor(points.length * 0.75);
+
+      const crossedFinish = car.hasCrossedStartLine &&
+                            car.currentWaypointIdx === 0 &&
+                            (car.lastSegmentIdx === points.length - 1 || car.lastSegmentIdx === points.length - 2) &&
+                            car.checkpointsPassed && car.checkpointsPassed.size >= reqCheckpoints;
+
+      if (crossedFinish) {
+        car.checkpointsPassed.clear();
+        car.checkpointsPassed.add(0);
+
+        if (isPlayer) {
+          const lapTime = (performance.now() - car.lapStartTime) / 1000;
+          if (lapTime < car.bestLapTime) {
+            car.bestLapTime = lapTime;
+          }
+          car.lapStartTime = performance.now();
+        }
+
+        if (car.lap >= this.currentCircuit.laps) {
+          if (!car.finished) {
+            car.finished = true;
+            car.finishOrder = ++this.finishCounter;
+            car.finishTime = this.raceTimer;
+            car.distanceAlongTrack = this.currentCircuit.laps * this.currentCircuit.totalLength;
+          }
+          if (isPlayer) {
+            this.finishRace(true);
+          }
+        } else {
+          car.lap++;
+        }
+      }
+
+      car.lastSegmentIdx = car.currentWaypointIdx;
     }
 
     updateRaceHUD(inSlipstream) {
@@ -3101,7 +3197,7 @@
       document.getElementById('hud-time-val').textContent = this.formatTime(this.raceTimer);
 
       const allCars = [this.playerCar, ...this.aiCars];
-      allCars.sort((a, b) => b.distanceAlongTrack - a.distanceAlongTrack);
+      allCars.sort(compareCars);
       const pos = allCars.indexOf(this.playerCar) + 1;
       document.getElementById('hud-pos-val').textContent = pos;
 
