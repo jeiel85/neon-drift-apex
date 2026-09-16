@@ -1729,6 +1729,8 @@
   // ==========================================
   // 5. 2D VEHICLE PHYSICS SIMULATION (CAR CLASS)
   // ==========================================
+  const PPM = 7.5; // Pixels Per Meter (1m = 7.5px, 40px car = 5.3m)
+
   class Car {
     constructor(config, isPlayer = false) {
       this.config = config;
@@ -1738,7 +1740,7 @@
       this.color = config.color || '#00f3ff';
       this.bodyStyle = config.bodyStyle || 'coupe';
 
-      // Transform & Kinematics
+      // Transform & Kinematics (vx, vy in px/s)
       this.x = 0;
       this.y = 0;
       this.heading = 0;
@@ -1747,8 +1749,8 @@
       this.angularVelocity = 0;
 
       // Base specs
-      this.topSpeed = config.baseSpeed;
-      this.accelPower = 2600 / config.baseAccel;
+      this.topSpeed = config.baseSpeed; // km/h
+      this.accelPower = 2800 / config.baseAccel;
       this.lateralGrip = config.baseGrip * 9.8;
       this.mass = config.baseWeight;
       this.length = config.length || 40;
@@ -1788,8 +1790,8 @@
     applyTunings(tunings) {
       if (!tunings) return;
       const { engine = 0, turbo = 0, tires = 0, brakes = 0, chassis = 0, nos = 0 } = tunings;
-      this.topSpeed = this.config.baseSpeed + engine * 12;
-      this.accelPower = (2600 / this.config.baseAccel) * (1 + turbo * 0.14);
+      this.topSpeed = this.config.baseSpeed + engine * 14;
+      this.accelPower = (2800 / this.config.baseAccel) * (1 + turbo * 0.15);
       this.lateralGrip = (this.config.baseGrip * 9.8) * (1 + tires * 0.08);
       this.mass = this.config.baseWeight * (1 - chassis * 0.04);
       this.brakePower = 1.0 + brakes * 0.15;
@@ -1817,50 +1819,54 @@
       }
 
       // 2. Smooth Steering Angle
-      const steerSpeed = 4.8;
+      const steerSpeed = 5.2;
       this.steerAngle += (steer * this.maxSteerAngle - this.steerAngle) * steerSpeed * dt;
 
-      // 3. Current Body Velocities
+      // 3. Current Body Velocities in px/s
       const cosH = Math.cos(this.heading);
       const sinH = Math.sin(this.heading);
       const vForward = this.vx * cosH + this.vy * sinH;
       const vLateral = -this.vx * sinH + this.vy * cosH;
-      const speedMagnitude = Math.hypot(this.vx, this.vy);
-      const speedKmh = speedMagnitude * 3.6;
+      const speedPx = Math.hypot(this.vx, this.vy);
+      const speedKmh = (speedPx / PPM) * 3.6;
 
       // 4. Longitudinal Drive & Brake Forces
       let fDrive = 0;
-      const maxSpeedMs = (this.topSpeed * (this.nosActive ? 1.20 : 1.0)) / 3.6;
+      const maxSpeedPx = ((this.topSpeed * (this.nosActive ? 1.22 : 1.0)) / 3.6) * PPM;
 
       if (throttle > 0) {
-        const speedRatio = Math.min(1.0, vForward / maxSpeedMs);
-        const engineTorque = this.accelPower * (1.0 - 0.72 * speedRatio);
-        fDrive += engineTorque * throttle;
+        const speedRatio = Math.min(1.0, vForward / maxSpeedPx);
+        const torque = this.accelPower * (1.0 - 0.70 * speedRatio) * PPM;
+        fDrive += torque * throttle;
       }
       if (brake > 0) {
-        if (vForward > 1.0) {
-          fDrive -= 1250 * (this.brakePower || 1.0) * brake;
-        } else if (vForward < -1.0) {
-          fDrive += 1250 * (this.brakePower || 1.0) * brake;
+        const brakeForce = 1400 * PPM * (this.brakePower || 1.0) * brake;
+        if (vForward > 2.0) {
+          fDrive -= brakeForce;
+        } else if (vForward < -2.0) {
+          fDrive += brakeForce;
         } else {
-          fDrive -= 480 * brake;
+          fDrive -= 450 * PPM * brake;
         }
       }
       // Drag and rolling resistance
-      fDrive -= (0.42 * vForward * Math.abs(vForward) + 16.0 * vForward);
+      const airDrag = 0.0032 * vForward * Math.abs(vForward);
+      const rollResist = 2.4 * vForward;
+      fDrive -= (airDrag + rollResist);
 
-      // 5. Lateral Grip Force (Pacejka-inspired lateral tire friction)
-      let gripCoeff = this.lateralGrip * 3.6;
+      // 5. Lateral Grip Force (Tire friction opposing side slip)
+      let gripCoeff = this.lateralGrip * 2.8;
       if (handbrake) {
-        gripCoeff *= 0.22; // rear breaks traction
+        gripCoeff *= 0.20; // Handbrake drops rear traction for power slide
       }
       let fLateral = -vLateral * gripCoeff;
-      const maxLateralGrip = (this.mass * 0.045) * 9.8 * (handbrake ? 0.38 : 1.25);
+      const maxLateralGrip = (this.mass * 0.045) * 9.8 * PPM * (handbrake ? 0.35 : 1.25);
       fLateral = Math.max(-maxLateralGrip, Math.min(maxLateralGrip, fLateral));
 
       // 6. World Acceleration Integration
-      const ax = (fDrive * cosH - fLateral * sinH) / (this.mass * 0.045);
-      const ay = (fDrive * sinH + fLateral * cosH) / (this.mass * 0.045);
+      const massFactor = this.mass * 0.045;
+      const ax = (fDrive * cosH - fLateral * sinH) / massFactor;
+      const ay = (fDrive * sinH + fLateral * cosH) / massFactor;
 
       this.vx += ax * dt;
       this.vy += ay * dt;
@@ -1868,22 +1874,22 @@
       this.y += this.vy * dt;
 
       // 7. Yaw Rotation (Bicycle model steer + oversteer inertia)
-      const wheelbase = this.length * 0.75;
+      const wheelbase = this.length * 0.82;
       let targetYawRate = (vForward / wheelbase) * Math.sin(this.steerAngle);
       if (handbrake && speedKmh > 20) {
-        targetYawRate += (steer !== 0 ? steer * 2.8 : (vLateral > 0 ? 1.8 : -1.8));
+        targetYawRate += (steer !== 0 ? steer * 3.0 : (vLateral > 0 ? 2.0 : -2.0));
       }
-      this.angularVelocity += (targetYawRate - this.angularVelocity) * 11.0 * dt;
+      this.angularVelocity += (targetYawRate - this.angularVelocity) * 12.0 * dt;
       this.heading += this.angularVelocity * dt;
 
       // 8. Drift Detection & Scoring
-      if (speedMagnitude > 5.0) {
+      if (speedPx > 35) { // speed > ~17 km/h
         const velocityAngle = Math.atan2(this.vy, this.vx);
         let angleDiff = Math.abs(velocityAngle - this.heading);
         while (angleDiff > Math.PI) angleDiff = Math.abs(angleDiff - Math.PI * 2);
 
         this.slipAngle = angleDiff;
-        if (this.slipAngle > 0.22 && speedKmh > 20) {
+        if (this.slipAngle > 0.22 && speedKmh > 22) {
           this.isDrifting = true;
           this.driftDuration += dt;
           this.driftMultiplier = Math.min(4.0, 1.0 + this.driftDuration * 0.6);
@@ -1928,7 +1934,6 @@
       const halfTrack = circuit.roadWidth * 0.5;
 
       this.currentWaypointIdx = closestSegmentIdx;
-      // Mark halfway point to prevent false lap triggers
       if (closestSegmentIdx >= Math.floor(points.length * 0.5)) {
         this.passedHalfway = true;
       }
@@ -1958,7 +1963,7 @@
     }
 
     getSpeedKmh() {
-      return Math.round(Math.hypot(this.vx, this.vy) * 3.6);
+      return Math.round((Math.hypot(this.vx, this.vy) / PPM) * 3.6);
     }
   }
 
@@ -3073,11 +3078,18 @@
 
       this.particles.update(dt);
 
-      // 6. Camera Smooth Follow (Lerp)
-      const targetCamX = this.playerCar.x;
-      const targetCamY = this.playerCar.y;
-      this.camera.x += (targetCamX - this.camera.x) * 6.0 * dt;
-      this.camera.y += (targetCamY - this.camera.y) * 6.0 * dt;
+      // 6. Camera Smooth Follow (Lerp) with Dynamic Zoom & Look-ahead
+      const targetZoom = Math.max(0.70, 1.05 - (speedKmh / 320) * 0.38);
+      this.camera.zoom = (this.camera.zoom || 1.0) + (targetZoom - (this.camera.zoom || 1.0)) * 3.5 * dt;
+
+      // Look-ahead targeting in the direction of velocity
+      const lookDist = Math.min(220, speedKmh * 0.85);
+      const moveAngle = speedKmh > 15 ? Math.atan2(this.playerCar.vy, this.playerCar.vx) : this.playerCar.heading;
+      const targetCamX = this.playerCar.x + Math.cos(moveAngle) * lookDist;
+      const targetCamY = this.playerCar.y + Math.sin(moveAngle) * lookDist;
+
+      this.camera.x += (targetCamX - this.camera.x) * 6.5 * dt;
+      this.camera.y += (targetCamY - this.camera.y) * 6.5 * dt;
 
       // 7. Update Race HUD & Live Minimap
       this.updateRaceHUD(inSlipstream);
@@ -3150,11 +3162,13 @@
       const ctx = this.ctx;
       const w = this.canvas.width;
       const h = this.canvas.height;
+      const speedKmh = this.playerCar.getSpeedKmh();
 
       ctx.clearRect(0, 0, w, h);
 
       ctx.save();
       ctx.translate(w / 2, h / 2);
+      ctx.scale(this.camera.zoom || 1.0, this.camera.zoom || 1.0);
       ctx.translate(-this.camera.x, -this.camera.y);
 
       // 1. Draw Asphalt Circuit Base & Guardrails
@@ -3182,6 +3196,43 @@
       // 5. Draw Particles
       this.particles.draw(ctx);
 
+      ctx.restore();
+
+      // 6. Draw Screen-Space High Speed Cyberpunk Speed Lines
+      this.drawSpeedLines(ctx, w, h, speedKmh, this.playerCar.nosActive);
+    }
+
+    drawSpeedLines(ctx, w, h, speedKmh, nosActive) {
+      if (speedKmh < 85 && !nosActive) return;
+      const intensity = nosActive ? 1.0 : Math.min(1.0, (speedKmh - 85) / 140);
+      const lineCount = Math.floor(18 * intensity);
+
+      ctx.save();
+      ctx.lineWidth = nosActive ? 2.5 : 1.5;
+      for (let i = 0; i < lineCount; i++) {
+        const edge = Math.floor(Math.random() * 4);
+        let sx, sy, ex, ey;
+        const len = 70 + Math.random() * 140;
+        if (edge === 0) {
+          sx = Math.random() * w; sy = 0;
+          ex = sx + (sx - w / 2) * 0.25; ey = sy + len;
+        } else if (edge === 1) {
+          sx = Math.random() * w; sy = h;
+          ex = sx + (sx - w / 2) * 0.25; ey = sy - len;
+        } else if (edge === 2) {
+          sx = 0; sy = Math.random() * h;
+          ex = sx + len; ey = sy + (sy - h / 2) * 0.25;
+        } else {
+          sx = w; sy = Math.random() * h;
+          ex = sx - len; ey = sy + (sy - h / 2) * 0.25;
+        }
+
+        ctx.strokeStyle = nosActive ? 'rgba(0, 243, 255, 0.55)' : 'rgba(255, 255, 255, 0.28)';
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(ex, ey);
+        ctx.stroke();
+      }
       ctx.restore();
     }
 
