@@ -830,8 +830,64 @@
       max-width: 440px;
     }
 
+    /* Multilingual Language Switcher */
+    .lang-switch-bar {
+      position: absolute;
+      top: 18px;
+      right: 24px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      z-index: 200;
+      background: rgba(12, 17, 34, 0.92);
+      border: 1px solid rgba(0, 243, 255, 0.4);
+      border-radius: 24px;
+      padding: 4px 10px;
+      box-shadow: 0 0 14px rgba(0, 243, 255, 0.25);
+      backdrop-filter: blur(8px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .lang-switch-bar.hidden {
+      display: none !important;
+    }
+
+    .lang-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: var(--font-family);
+    }
+
+    .lang-btn:hover {
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .lang-btn.active {
+      background: rgba(0, 243, 255, 0.25);
+      border-color: var(--neon-cyan);
+      color: var(--neon-cyan);
+      box-shadow: 0 0 8px rgba(0, 243, 255, 0.4);
+    }
+
     /* Responsive adjustments */
     @media (max-width: 768px) {
+      .lang-switch-bar {
+        top: 8px;
+        right: 10px;
+        padding: 3px 6px;
+      }
+      .lang-btn {
+        font-size: 11px;
+        padding: 3px 6px;
+      }
       .screen-panel {
         width: 95%;
         padding: 20px;
@@ -857,24 +913,32 @@
     <!-- Main 2D Racing Simulation Canvas -->
     <canvas id="game-canvas"></canvas>
 
+    <!-- Multilingual Language Selector Bar -->
+    <div id="lang-switch-bar" class="lang-switch-bar">
+      <span style="font-size: 13px; line-height: 22px; margin-right: 2px;">🌐</span>
+      <button class="lang-btn active" data-lang="ko">한국어</button>
+      <button class="lang-btn" data-lang="en">English</button>
+      <button class="lang-btn" data-lang="ja">日本語</button>
+    </div>
+
     <!-- 1. MAIN MENU SCREEN -->
     <div id="menu-screen" class="screen-panel interactive">
       <div class="game-logo">NEON DRIFT</div>
-      <div class="subtitle">Underground Apex // Cyber Circuit RPG</div>
+      <div class="subtitle" data-i18n="menu_subtitle">언더그라운드 에이펙스 // 사이버 서킷 RPG</div>
 
       <div class="credits-badge" id="menu-credits-display">
         <span>CR</span> <span id="menu-credits-val">12,500</span>
       </div>
 
       <div class="menu-button-group">
-        <button class="btn btn-green" id="btn-menu-career">🏁 커리어 리그 (Career League)</button>
-        <button class="btn" id="btn-menu-garage">🔧 차고 & 튜닝 숍 (Garage)</button>
-        <button class="btn btn-pink" id="btn-menu-drag">⚡ 1/4마일 드래그 레이스 (Drag Strip)</button>
-        <button class="btn" id="btn-menu-bounties">🏆 스폰서 바운티 퀘스트 (Contracts)</button>
-        <button class="btn btn-small" id="btn-audio-toggle" style="margin-top: 10px;">🔊 오디오 ON/OFF</button>
-        <button class="btn btn-small btn-pink" id="btn-data-reset" style="opacity: 0.6;">데이터 초기화 (Reset)</button>
+        <button class="btn btn-green" id="btn-menu-career" data-i18n="btn_career">🏁 커리어 리그 (Career)</button>
+        <button class="btn" id="btn-menu-garage" data-i18n="btn_garage">🔧 차고 & 튜닝 숍 (Garage)</button>
+        <button class="btn btn-pink" id="btn-menu-drag" data-i18n="btn_drag">⚡ 1/4마일 드래그 레이스 (Drag Strip)</button>
+        <button class="btn" id="btn-menu-bounties" data-i18n="btn_bounties">🏆 스폰서 의뢰 계약 (Bounties)</button>
+        <button class="btn btn-small" id="btn-audio-toggle" data-i18n="btn_audio" style="margin-top: 10px;">🔊 사운드 ON/OFF</button>
+        <button class="btn btn-small btn-pink" id="btn-data-reset" data-i18n="btn_reset" style="opacity: 0.6;">데이터 초기화 (Reset)</button>
       </div>
-      <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">
+      <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;" data-i18n="menu_hint">
         조작: [W/A/S/D] or [방향키] 주행, [SPACE] 파워 드리프트, [SHIFT] NOS 부스트
       </div>
     </div>
@@ -883,8 +947,8 @@
     <div id="career-screen" class="screen-panel hidden interactive">
       <div class="screen-header">
         <div>
-          <div class="screen-title">커리어 레이싱 리그</div>
-          <div style="font-size: 13px; color: var(--text-muted);">지하 언더그라운드 리그 12개 서킷을 제패하고 전설의 레이서가 되세요</div>
+          <div class="screen-title" data-i18n="career_title">커리어 레이싱 리그</div>
+          <div style="font-size: 13px; color: var(--text-muted);" data-i18n="career_subtitle">지하 언더그라운드 리그 12개 서킷을 제패하고 전설의 레이서가 되세요</div>
         </div>
         <div class="credits-badge">
           <span>CR</span> <span class="player-credits-val">0</span>
@@ -893,10 +957,10 @@
 
       <!-- League Tabs -->
       <div class="league-tabs">
-        <button class="league-tab-btn active" data-league="0">1. 루키 컵 (Rookie Cup)</button>
-        <button class="league-tab-btn" data-league="1">2. 클럽맨 컵 (Clubman Cup)</button>
-        <button class="league-tab-btn" data-league="2">3. 나이트 스트리트 (Night Street)</button>
-        <button class="league-tab-btn" data-league="3">4. 그랜드 마스터 (Grand Master)</button>
+        <button class="league-tab-btn active" data-league="0" data-i18n="league_0">1. 루키 컵 (Rookie Cup)</button>
+        <button class="league-tab-btn" data-league="1" data-i18n="league_1">2. 클럽맨 컵 (Clubman Cup)</button>
+        <button class="league-tab-btn" data-league="2" data-i18n="league_2">3. 나이트 스트리트 (Night Street)</button>
+        <button class="league-tab-btn" data-league="3" data-i18n="league_3">4. 그랜드 마스터 (Grand Master)</button>
       </div>
 
       <!-- Circuit Cards Grid -->
@@ -905,7 +969,7 @@
       </div>
 
       <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
-        <button class="btn" id="btn-career-back">메인 메뉴로 (Back)</button>
+        <button class="btn" id="btn-career-back" data-i18n="btn_back">메인 메뉴로 (Back)</button>
       </div>
     </div>
 
@@ -913,8 +977,8 @@
     <div id="garage-screen" class="screen-panel hidden interactive">
       <div class="screen-header">
         <div>
-          <div class="screen-title">언더그라운드 차고지 & 튜닝 워크숍</div>
-          <div style="font-size: 13px; color: var(--text-muted);">6종 머신 구입, 6대 하드웨어 튜닝 및 네온 컬러 커스텀</div>
+          <div class="screen-title" data-i18n="garage_title">언더그라운드 차고지 & 튜닝 워크숍</div>
+          <div style="font-size: 13px; color: var(--text-muted);" data-i18n="garage_subtitle">6종 머신 구입, 6대 하드웨어 튜닝 및 네온 컬러 커스텀</div>
         </div>
         <div class="credits-badge">
           <span>CR</span> <span class="player-credits-val">0</span>
@@ -925,39 +989,39 @@
         <!-- Left: Car Showcase -->
         <div class="car-showcase-panel">
           <div class="car-selector-nav">
-            <button class="btn btn-small" id="btn-car-prev">◀ 이전</button>
+            <button class="btn btn-small" id="btn-car-prev" data-i18n="btn_prev">◀ 이전</button>
             <div class="car-title-info">
               <div class="car-name" id="garage-car-name">AE-Sprinter</div>
               <div class="car-class-badge" id="garage-car-class">Class C // Hatchback</div>
             </div>
-            <button class="btn btn-small" id="btn-car-next">다음 ▶</button>
+            <button class="btn btn-small" id="btn-car-next" data-i18n="btn_next">다음 ▶</button>
           </div>
 
           <canvas id="car-preview-canvas" class="car-preview-canvas" width="400" height="220"></canvas>
 
           <!-- Action (Select or Buy) -->
-          <button class="btn btn-green" id="btn-car-action" style="width: 100%; margin-bottom: 12px;">선택됨 (Active)</button>
+          <button class="btn btn-green" id="btn-car-action" style="width: 100%; margin-bottom: 12px;" data-i18n="car_active_btn">현재 탑승 중 (Active)</button>
 
           <!-- Color Customizer -->
-          <div style="font-size: 12px; color: var(--text-muted); align-self: flex-start;">네온 도색 커스텀:</div>
+          <div style="font-size: 12px; color: var(--text-muted); align-self: flex-start;" data-i18n="garage_paint_label">네온 도색 커스텀:</div>
           <div class="color-swatches" id="color-swatches-container"></div>
 
           <!-- Dynamic Car Stats Bar -->
           <div class="stats-list">
             <div class="stat-row">
-              <div class="stat-header"><span>최고속도 (Top Speed)</span><span id="stat-val-speed">185 km/h</span></div>
+              <div class="stat-header"><span data-i18n="stat_speed">최고속도</span><span id="stat-val-speed">185 km/h</span></div>
               <div class="stat-bar-track"><div class="stat-bar-fill" id="stat-bar-speed" style="width: 45%;"></div></div>
             </div>
             <div class="stat-row">
-              <div class="stat-header"><span>가속 토크 (Acceleration)</span><span id="stat-val-accel">5.2s</span></div>
+              <div class="stat-header"><span data-i18n="stat_accel">가속 토크</span><span id="stat-val-accel">5.2s</span></div>
               <div class="stat-bar-track"><div class="stat-bar-fill" id="stat-bar-accel" style="width: 50%;"></div></div>
             </div>
             <div class="stat-row">
-              <div class="stat-header"><span>드리프트 제어 & 코너링 그립</span><span id="stat-val-grip">B+</span></div>
+              <div class="stat-header"><span data-i18n="stat_grip">드리프트 제어 & 코너링 그립</span><span id="stat-val-grip">B+</span></div>
               <div class="stat-bar-track"><div class="stat-bar-fill" id="stat-bar-grip" style="width: 60%;"></div></div>
             </div>
             <div class="stat-row">
-              <div class="stat-header"><span>경량화 & 섀시 밸런스</span><span id="stat-val-weight">1,050 kg</span></div>
+              <div class="stat-header"><span data-i18n="stat_weight">경량화 & 섀시 밸런스</span><span id="stat-val-weight">1,050 kg</span></div>
               <div class="stat-bar-track"><div class="stat-bar-fill" id="stat-bar-weight" style="width: 70%;"></div></div>
             </div>
           </div>
@@ -965,7 +1029,7 @@
 
         <!-- Right: 6-Part Hardware Tuning -->
         <div style="display: flex; flex-direction: column;">
-          <div style="font-size: 16px; font-weight: 800; color: var(--neon-cyan); margin-bottom: 10px;">
+          <div style="font-size: 16px; font-weight: 800; color: var(--neon-cyan); margin-bottom: 10px;" data-i18n="tuning_header">
             하드웨어 업그레이드 (Performance Tuning)
           </div>
           <div class="tuning-parts-list" id="tuning-parts-container">
@@ -975,7 +1039,7 @@
       </div>
 
       <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
-        <button class="btn" id="btn-garage-back">메인 메뉴로 (Back)</button>
+        <button class="btn" id="btn-garage-back" data-i18n="btn_back">메인 메뉴로 (Back)</button>
       </div>
     </div>
 
@@ -983,8 +1047,8 @@
     <div id="drag-screen" class="screen-panel hidden interactive">
       <div class="screen-header">
         <div>
-          <div class="screen-title">1/4마일(400M) 드래그 레이스 챌린지</div>
-          <div style="font-size: 13px; color: var(--text-muted);">타코미터 RPM 그린존을 노려 완벽한 변속으로 라이벌을 압도하세요</div>
+          <div class="screen-title" data-i18n="drag_title">1/4마일(400M) 드래그 레이스 챌린지</div>
+          <div style="font-size: 13px; color: var(--text-muted);" data-i18n="drag_subtitle">타코미터 RPM 그린존을 노려 완벽한 변속으로 라이벌을 압도하세요</div>
         </div>
         <div class="credits-badge">
           <span>CR</span> <span class="player-credits-val">0</span>
@@ -996,19 +1060,19 @@
         <div class="drag-shift-hint" id="drag-shift-feedback">READY...</div>
 
         <div style="display: flex; gap: 30px; font-family: monospace; font-size: 18px;">
-          <div>기어: <span id="drag-gear-display" style="color: var(--neon-pink); font-size: 26px; font-weight: 900;">1</span>단</div>
-          <div>거리: <span id="drag-dist-display" style="color: var(--neon-cyan);">0 / 400 m</span></div>
-          <div>시간: <span id="drag-time-display" style="color: var(--neon-yellow);">0.00 s</span></div>
+          <div><span data-i18n="drag_gear_lbl">기어: </span><span id="drag-gear-display" style="color: var(--neon-pink); font-size: 26px; font-weight: 900;">1</span><span id="drag-gear-unit" data-i18n="drag_gear_unit">단</span></div>
+          <div><span data-i18n="drag_dist_lbl">거리: </span><span id="drag-dist-display" style="color: var(--neon-cyan);">0 / 400 m</span></div>
+          <div><span data-i18n="drag_time_lbl">시간: </span><span id="drag-time-display" style="color: var(--neon-yellow);">0.00 s</span></div>
         </div>
 
         <div style="display: flex; gap: 14px; margin-top: 10px;">
-          <button class="btn btn-green" id="btn-drag-start">레이스 시작 (Space)</button>
-          <button class="btn btn-pink" id="btn-drag-shift" disabled>기어 변속! (Shift / Space)</button>
+          <button class="btn btn-green" id="btn-drag-start" data-i18n="btn_drag_start">레이스 시작 (Space)</button>
+          <button class="btn btn-pink" id="btn-drag-shift" data-i18n="btn_drag_shift" disabled>기어 변속! (Shift / Space)</button>
         </div>
       </div>
 
       <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
-        <button class="btn" id="btn-drag-back">메인 메뉴로 (Back)</button>
+        <button class="btn" id="btn-drag-back" data-i18n="btn_back">메인 메뉴로 (Back)</button>
       </div>
     </div>
 
@@ -1016,8 +1080,8 @@
     <div id="bounties-screen" class="screen-panel hidden interactive">
       <div class="screen-header">
         <div>
-          <div class="screen-title">스폰서 의뢰 계약 (Bounties)</div>
-          <div style="font-size: 13px; color: var(--text-muted);">언더그라운드 스폰서들이 요구하는 미션을 달성하고 특별 상금을 획득하세요</div>
+          <div class="screen-title" data-i18n="bounties_title">스폰서 의뢰 계약 (Bounties)</div>
+          <div style="font-size: 13px; color: var(--text-muted);" data-i18n="bounties_subtitle">언더그라운드 스폰서들이 요구하는 미션을 달성하고 특별 상금을 획득하세요</div>
         </div>
         <div class="credits-badge">
           <span>CR</span> <span class="player-credits-val">0</span>
@@ -1029,7 +1093,7 @@
       </div>
 
       <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
-        <button class="btn" id="btn-bounties-back">메인 메뉴로 (Back)</button>
+        <button class="btn" id="btn-bounties-back" data-i18n="btn_back">메인 메뉴로 (Back)</button>
       </div>
     </div>
 
@@ -1039,15 +1103,15 @@
       <div class="hud-top-bar">
         <div class="hud-top-left">
           <div class="hud-pos-box">
-            <span style="font-size: 14px; color: var(--text-muted);">POS</span>
+            <span style="font-size: 14px; color: var(--text-muted);" data-i18n="hud_pos">POS</span>
             <span class="hud-pos-main" id="hud-pos-val">1</span>
             <span style="font-size: 16px; color: var(--text-muted);">/ 4</span>
           </div>
           <div class="hud-lap-box">
-            LAP <span id="hud-lap-val" style="color: var(--neon-yellow);">1 / 3</span>
+            <span data-i18n="hud_lap">LAP</span> <span id="hud-lap-val" style="color: var(--neon-yellow);">1 / 3</span>
           </div>
           <div class="hud-time-box">
-            TIME <span id="hud-time-val" style="color: #fff;">0:00.00</span>
+            <span data-i18n="hud_time">TIME</span> <span id="hud-time-val" style="color: #fff;">0:00.00</span>
           </div>
         </div>
 
@@ -1064,7 +1128,7 @@
       </div>
 
       <!-- Slipstream Notification -->
-      <div class="slipstream-alert hidden" id="slipstream-alert-box">
+      <div class="slipstream-alert hidden" id="slipstream-alert-box" data-i18n="hud_slipstream">
         SLIPSTREAM BOOST ▲
       </div>
 
@@ -1083,7 +1147,7 @@
 
       <!-- Bottom HUD -->
       <div class="hud-bottom-bar">
-        <div class="hud-controls-hint">
+        <div class="hud-controls-hint" id="hud-controls-hint-el" data-i18n="hud_hint">
           [<kbd>W</kbd>/<kbd>▲</kbd>] 가속 &nbsp;|&nbsp; [<kbd>S</kbd>/<kbd>▼</kbd>] 브레이크/후진<br>
           [<kbd>A</kbd>/<kbd>D</kbd>] 조향 &nbsp;|&nbsp; [<kbd>SPACE</kbd>] 파워 드리프트<br>
           [<kbd>SHIFT</kbd>] NOS 부스터 &nbsp;|&nbsp; [<kbd>ESC</kbd>] 일시정지
@@ -1112,7 +1176,7 @@
     <div id="result-screen" class="screen-panel hidden interactive">
       <div class="screen-header">
         <div>
-          <div class="screen-title" id="result-header-title">레이스 결과</div>
+          <div class="screen-title" id="result-header-title" data-i18n="res_title">레이스 결과</div>
           <div style="font-size: 13px; color: var(--text-muted);" id="result-circuit-name">루키 컵: 네온 독스</div>
         </div>
         <div class="credits-badge">
@@ -1122,40 +1186,40 @@
 
       <div class="result-summary-box">
         <div class="result-row">
-          <span>최종 순위</span>
+          <span data-i18n="res_pos_lbl">최종 순위</span>
           <span class="val" id="res-pos-val" style="color: var(--neon-cyan); font-size: 24px; font-weight: 900;">1st Place</span>
         </div>
         <div class="result-row">
-          <span>총 랩타임 (Total Time)</span>
+          <span data-i18n="res_time_lbl">총 랩타임 (Total Time)</span>
           <span class="val" id="res-time-val">1:24.88</span>
         </div>
         <div class="result-row">
-          <span>최고 랩타임 (Best Lap)</span>
+          <span data-i18n="res_bestlap_lbl">최고 랩타임 (Best Lap)</span>
           <span class="val" id="res-bestlap-val">27.42</span>
         </div>
         <div class="result-row">
-          <span>총 드리프트 포인트</span>
+          <span data-i18n="res_drift_lbl">총 드리프트 포인트</span>
           <span class="val" id="res-drift-val">4,820 PTS</span>
         </div>
         <div class="result-row highlight">
-          <span>획득 총 상금 (Total Reward)</span>
+          <span data-i18n="res_reward_lbl">획득 총 상금 (Total Reward)</span>
           <span class="val" id="res-reward-val">+15,000 CR</span>
         </div>
       </div>
 
       <div style="display: flex; gap: 14px; justify-content: flex-end;">
-        <button class="btn" id="btn-result-retry">다시 도전 (Retry)</button>
-        <button class="btn btn-green" id="btn-result-continue">커리어로 복귀 (Continue)</button>
+        <button class="btn" id="btn-result-retry" data-i18n="btn_retry">다시 도전 (Retry)</button>
+        <button class="btn btn-green" id="btn-result-continue" data-i18n="btn_continue">커리어로 복귀 (Continue)</button>
       </div>
     </div>
 
     <!-- 8. PAUSE SCREEN -->
     <div id="pause-screen" class="screen-panel hidden interactive">
-      <div class="game-logo" style="font-size: 32px;">일시정지</div>
+      <div class="game-logo" style="font-size: 32px;" data-i18n="pause_title">일시정지</div>
       <div class="menu-button-group" style="margin-top: 14px;">
-        <button class="btn btn-green" id="btn-pause-resume">레이스 계속하기 (Resume)</button>
-        <button class="btn" id="btn-pause-restart">처음부터 재도전 (Restart)</button>
-        <button class="btn btn-pink" id="btn-pause-quit">레이스 포기 및 나가기 (Quit)</button>
+        <button class="btn btn-green" id="btn-pause-resume" data-i18n="btn_resume">레이스 계속하기 (Resume)</button>
+        <button class="btn" id="btn-pause-restart" data-i18n="btn_restart">처음부터 재도전 (Restart)</button>
+        <button class="btn btn-pink" id="btn-pause-quit" data-i18n="btn_quit">레이스 포기 및 나가기 (Quit)</button>
       </div>
     </div>
 
@@ -1694,7 +1758,405 @@
   ];
 
   // ==========================================
-  // 4. PERSISTENT SAVE MANAGER (LOCALSTORAGE)
+  // 4. MULTILINGUAL LOCALIZATION (I18N)
+  // ==========================================
+  const I18N = {
+    ko: {
+      menu_subtitle: '언더그라운드 에이펙스 // 사이버 서킷 RPG',
+      btn_career: '🏁 커리어 리그 (Career)',
+      btn_garage: '🔧 차고 & 튜닝 숍 (Garage)',
+      btn_drag: '⚡ 1/4마일 드래그 레이스 (Drag Strip)',
+      btn_bounties: '🏆 스폰서 의뢰 계약 (Bounties)',
+      btn_audio: '🔊 사운드 ON/OFF',
+      btn_reset: '데이터 초기화 (Reset)',
+      menu_hint: '조작: [W/A/S/D] or [방향키] 가속/조향, [SPACE] 파워 드리프트, [SHIFT] NOS 부스트',
+      btn_back: '메인 메뉴로 (Back)',
+      btn_prev: '◀ 이전',
+      btn_next: '다음 ▶',
+
+      career_title: '커리어 레이싱 리그',
+      career_subtitle: '지하 언더그라운드 리그 12개 서킷을 제패하고 전설의 레이서가 되세요',
+      league_0: '1. 루키 컵 (Rookie Cup)',
+      league_1: '2. 클럽맨 컵 (Clubman Cup)',
+      league_2: '3. 나이트 스트리트 (Night Street)',
+      league_3: '4. 그랜드 마스터 (Grand Master)',
+      prize_label: '우승 상금:',
+      bestlap_label: '최고 기록:',
+      circuit_start_btn: '서킷 레이스 시작',
+      circuit_locked_btn: '🔒 잠김',
+
+      garage_title: '언더그라운드 차고지 & 튜닝 워크숍',
+      garage_subtitle: '6종 머신 구입, 6대 하드웨어 튜닝 및 네온 컬러 커스텀',
+      car_active_btn: '현재 탑승 중 (Active)',
+      car_select_btn: '이 머신 선택하기 (Select)',
+      car_buy_btn: '머신 구매',
+      garage_paint_label: '네온 도색 커스텀:',
+      stat_speed: '최고속도',
+      stat_accel: '가속 토크',
+      stat_grip: '드리프트 제어 & 코너링 그립',
+      stat_weight: '경량화 & 섀시 밸런스',
+      tuning_header: '하드웨어 업그레이드 (Performance Tuning)',
+      tier_max: 'MAX TIER',
+
+      drag_title: '1/4마일(400M) 드래그 레이스 챌린지',
+      drag_subtitle: '타코미터 RPM 그린존을 노려 완벽한 변속으로 라이벌을 압도하세요',
+      drag_gear_lbl: '기어: ',
+      drag_gear_unit: '단',
+      drag_dist_lbl: '거리: ',
+      drag_time_lbl: '시간: ',
+      btn_drag_start: '레이스 시작 (Space)',
+      btn_drag_shift: '기어 변속! (Shift / Space)',
+      drag_ready: 'READY...',
+      drag_perfect: 'PERFECT! ▲',
+      drag_good: 'GOOD! ▲',
+      drag_early: 'EARLY! ▼',
+      drag_late: 'LATE! ▼',
+      drag_over_rev: 'OVER REV! ✕',
+      drag_finish_title: '[1/4마일 결승선 통과!]',
+      drag_victory: '🏆 승리 (VICTORY)',
+      drag_defeat: '패배 (DEFEAT)',
+      drag_record_lbl: '기록:',
+      drag_zero100_lbl: '0-100km/h:',
+      drag_topspeed_lbl: '최고속도:',
+      drag_reward_lbl: '상금:',
+
+      bounties_title: '스폰서 의뢰 계약 (Bounties)',
+      bounties_subtitle: '언더그라운드 스폰서들이 요구하는 미션을 달성하고 특별 상금을 획득하세요',
+      bounty_claimed: '✓ 계약 완료 (Claimed)',
+      bounty_progress: '진행 중 (In Progress)',
+
+      hud_hint: '[W/▲] 가속 &nbsp;|&nbsp; [S/▼] 브레이크/후진<br>[A/D] 조향 &nbsp;|&nbsp; [SPACE] 파워 드리프트<br>[SHIFT] NOS 부스터 &nbsp;|&nbsp; [ESC] 일시정지',
+      hud_slipstream: '슬립스트림 부스트 ▲',
+      hud_pos: 'POS',
+      hud_lap: 'LAP',
+      hud_time: 'TIME',
+
+      res_title: '레이스 결과',
+      res_pos_lbl: '최종 순위',
+      res_pos_1: '1위 (우승!)',
+      res_pos_2: '2위 (완주)',
+      res_pos_3: '3위 (완주)',
+      res_pos_4: '4위 (완주)',
+      res_time_lbl: '총 랩타임 (Total Time)',
+      res_bestlap_lbl: '최고 랩타임 (Best Lap)',
+      res_drift_lbl: '총 드리프트 포인트',
+      res_reward_lbl: '획득 총 상금 (Total Reward)',
+      btn_retry: '다시 도전 (Retry)',
+      btn_continue: '커리어로 복귀 (Continue)',
+
+      pause_title: '일시정지',
+      btn_resume: '레이스 계속하기 (Resume)',
+      btn_restart: '처음부터 재도전 (Restart)',
+      btn_quit: '레이스 포기 및 나가기 (Quit)',
+
+      reset_confirm: '정말로 모든 저장 데이터를 초기화하시겠습니까? (되돌릴 수 없습니다)',
+
+      cars: {
+        hatchback_ae: { name: 'AE-Sprinter', classType: 'Class C // 해치백', desc: '경량 핫해치. 민첩한 회두성과 뛰어난 코너링으로 초보자에게 최적인 스타터 머신.' },
+        coupe_silvia: { name: 'Silvia-K2', classType: 'Class B // 스트리트 쿠페', desc: 'FR 구동계의 드리프트 전설. 핸드브레이크 파워 슬라이드와 각도 유지가 탁월함.' },
+        muscle_v8: { name: 'Muscle-V8 Thunder', classType: 'Class B // 클래식 머슬', desc: '압도적인 V8 슈퍼차저 토크. 직선 주로를 찢어발기며 강력한 오버스티어를 분출함.' },
+        rotary_apex: { name: 'Rotary-Apex RX', classType: 'Class A // 로터리 스포츠', desc: '9,000 RPM 고회전 트윈 로터리. 면도날 같은 에이펙스 공략과 부드러운 고속 드리프트.' },
+        tuner_awd: { name: 'Shadow-R AWD', classType: 'Class S // AWD 튜너', desc: '전자제어 4륜 트랙션의 괴물. 어떤 악천후 코너에서도 로켓처럼 튀어나가는 언더그라운드 챔피언.' },
+        hyper_phantom: { name: 'Phantom-GT Midship', classType: 'Class SS // 하이퍼 에이펙스', desc: '미드십 트윈터보 하이퍼카. 공기역학적 다운포스와 극한의 한계 그립을 가진 궁극의 머신.' }
+      },
+
+      tunings: {
+        engine: { name: '엔진 블록 & ECU (Engine)', effect: '+최고속도, +고회전 파워' },
+        turbo: { name: '트윈 터보차저 (Turbo)', effect: '+가속 토크, +부스트 스풀' },
+        tires: { name: '레이싱 컴파운드 타이어 (Tires)', effect: '+코너링 횡그립, +드리프트 안정성' },
+        brakes: { name: '카본 세라믹 브레이크 (Brakes)', effect: '+급제동력, +핸드브레이크 반응' },
+        chassis: { name: '경량 카본 섀시 (Chassis)', effect: '-공차 중량, +선회 민첩성' },
+        nos: { name: 'NOS 액화 니트로 키트 (Nitrous)', effect: '+NOS 용량, +추진 압력' }
+      },
+
+      circuits: [
+        { name: '네온 독스 (Neon Docks)', desc: '부둣가 공터에 마련된 고속 타원 및 기초 헤어핀 코스' },
+        { name: '인터스트리얼 앨리 (Industrial Alley)', desc: '공장 지대의 연속 90도 직각 코너와 가드레일' },
+        { name: '하버 스프린트 (Harbor Sprint)', desc: '긴 바닷바람 직선로와 급격한 S자 시케인 감속 구간' },
+        { name: '리버사이드 루프 (Riverside Loop)', desc: '강변을 끼고 돌아가는 롱 헤어핀과 기술적 코너' },
+        { name: '익스프레스웨이 정션 (Expressway Junction)', desc: '복잡한 고가도로 분기점. 슬립스트림 추월이 승부처' },
+        { name: '차이나타운 시케인 (Chinatown Chicanes)', desc: '좁은 골목길 사이로 홍등이 빛나는 3연속 시케인' },
+        { name: '네오 신주쿠 스트립 (Neo Shinjuku Strip)', desc: '거대한 네온 빌딩 숲. 300km/h 직선 직후의 극한 헤어핀' },
+        { name: '사이버 터널 런 (Cyber Tunnel Run)', desc: '인공 지하 터널 속 블라인드 코너와 뱅크 구간' },
+        { name: '미드나잇 스카이라인 (Midnight Skyline)', desc: '해안 고속도로와 도심 외곽을 잇는 테크니컬 드리프트 코스' },
+        { name: '에이펙스 인터내셔널 (Apex International)', desc: '모든 레이싱 기술의 정수를 요구하는 종합 그랑프리 서킷' },
+        { name: '데빌스 헤어핀 패스 (Devil\'s Hairpin)', desc: '숨 쉴 틈 없이 몰아치는 5연속 헤어핀. 완벽한 카운터스티어 필수' },
+        { name: '언더그라운드 피날레 (Grand Finale)', desc: '최대 전장, 최강의 라이벌들이 결집하는 전설의 최종 결전지' }
+      ],
+
+      bounties: {
+        bounty_drift_1: { title: '스모크 킹 (Smoke King)', desc: '한 레이스에서 총 드리프트 점수 3,500점 이상 달성' },
+        bounty_clean_win: { title: '고스트 드라이버 (Ghost Driver)', desc: '벽 충돌 3회 이하로 레이스 1위 우승' },
+        bounty_drag_fast: { title: '쿼터마일 데몬 (Quarter-Mile Demon)', desc: '드래그 레이스 1/4마일 11.5초 이하 기록 달성' },
+        bounty_grandmaster: { title: '언더그라운드 레전드 (Apex Legend)', desc: '그랜드 마스터 리그 서킷 1회 이상 우승' }
+      }
+    },
+
+    en: {
+      menu_subtitle: 'Underground Apex // Cyber Circuit RPG',
+      btn_career: '🏁 Career League',
+      btn_garage: '🔧 Garage & Tuning',
+      btn_drag: '⚡ 1/4 Mile Drag Strip',
+      btn_bounties: '🏆 Sponsor Contracts',
+      btn_audio: '🔊 Audio ON/OFF',
+      btn_reset: 'Reset Save Data',
+      menu_hint: 'Controls: [W/A/S/D] or [Arrows] Drive, [SPACE] Power Drift, [SHIFT] NOS Boost',
+      btn_back: 'Back to Menu',
+      btn_prev: '◀ Prev',
+      btn_next: 'Next ▶',
+
+      career_title: 'Career Racing League',
+      career_subtitle: 'Conquer all 12 underground circuits and become the Apex Legend',
+      league_0: '1. Rookie Cup',
+      league_1: '2. Clubman Cup',
+      league_2: '3. Night Street',
+      league_3: '4. Grand Master',
+      prize_label: 'Winner Prize:',
+      bestlap_label: 'Best Lap:',
+      circuit_start_btn: 'Start Circuit Race',
+      circuit_locked_btn: '🔒 Locked',
+
+      garage_title: 'Underground Garage & Tuning',
+      garage_subtitle: 'Acquire 6 performance machines, upgrade 6 core parts & customize neon livery',
+      car_active_btn: 'Currently Selected (Active)',
+      car_select_btn: 'Select This Machine',
+      car_buy_btn: 'Buy Machine',
+      garage_paint_label: 'Neon Livery Custom:',
+      stat_speed: 'Top Speed',
+      stat_accel: 'Acceleration',
+      stat_grip: 'Drift Control & Grip',
+      stat_weight: 'Weight & Balance',
+      tuning_header: 'Performance Hardware Tuning',
+      tier_max: 'MAX TIER',
+
+      drag_title: '1/4 Mile (400M) Drag Race Challenge',
+      drag_subtitle: 'Nail tachometer RPM green shifts to dominate rivals on the strip',
+      drag_gear_lbl: 'GEAR: ',
+      drag_gear_unit: '',
+      drag_dist_lbl: 'DIST: ',
+      drag_time_lbl: 'TIME: ',
+      btn_drag_start: 'Launch Drag (Space)',
+      btn_drag_shift: 'Shift Up! (Shift / Space)',
+      drag_ready: 'READY...',
+      drag_perfect: 'PERFECT! ▲',
+      drag_good: 'GOOD! ▲',
+      drag_early: 'EARLY! ▼',
+      drag_late: 'LATE! ▼',
+      drag_over_rev: 'OVER REV! ✕',
+      drag_finish_title: '[1/4 Mile Finish Line!]',
+      drag_victory: '🏆 VICTORY',
+      drag_defeat: 'DEFEAT',
+      drag_record_lbl: 'Time:',
+      drag_zero100_lbl: '0-100 km/h:',
+      drag_topspeed_lbl: 'Top Speed:',
+      drag_reward_lbl: 'Reward:',
+
+      bounties_title: 'Sponsor Contracts (Bounties)',
+      bounties_subtitle: 'Complete high-stakes underground contracts to claim exclusive rewards',
+      bounty_claimed: '✓ Completed',
+      bounty_progress: 'In Progress',
+
+      hud_hint: '[W/▲] Gas &nbsp;|&nbsp; [S/▼] Brake/Rev<br>[A/D] Steer &nbsp;|&nbsp; [SPACE] Power Drift<br>[SHIFT] NOS Boost &nbsp;|&nbsp; [ESC] Pause',
+      hud_slipstream: 'SLIPSTREAM BOOST ▲',
+      hud_pos: 'POS',
+      hud_lap: 'LAP',
+      hud_time: 'TIME',
+
+      res_title: 'Race Results',
+      res_pos_lbl: 'Final Position',
+      res_pos_1: '1st Place (Winner!)',
+      res_pos_2: '2nd Place (Finished)',
+      res_pos_3: '3rd Place (Finished)',
+      res_pos_4: '4th Place (Finished)',
+      res_time_lbl: 'Total Time',
+      res_bestlap_lbl: 'Best Lap',
+      res_drift_lbl: 'Drift Score',
+      res_reward_lbl: 'Total Reward',
+      btn_retry: 'Retry Race',
+      btn_continue: 'Continue Career',
+
+      pause_title: 'PAUSED',
+      btn_resume: 'Resume Race',
+      btn_restart: 'Restart Race',
+      btn_quit: 'Quit to Menu',
+
+      reset_confirm: 'Are you sure you want to reset all career data? (Cannot be undone)',
+
+      cars: {
+        hatchback_ae: { name: 'AE-Sprinter', classType: 'Class C // Hatchback', desc: 'Lightweight hot hatch. Nimble steering and exceptional cornering balance for rookie drivers.' },
+        coupe_silvia: { name: 'Silvia-K2', classType: 'Class B // Street Coupe', desc: 'FR drift legend. Renowned for power slides, angle control, and responsive countersteer.' },
+        muscle_v8: { name: 'Muscle-V8 Thunder', classType: 'Class B // Classic Muscle', desc: 'Massive supercharged V8 torque tearing through straights with aggressive power oversteer.' },
+        rotary_apex: { name: 'Rotary-Apex RX', classType: 'Class A // Rotary Sports', desc: '9,000 RPM high-rev twin rotor. Laser-sharp apex clipping and high-speed drift flow.' },
+        tuner_awd: { name: 'Shadow-R AWD', classType: 'Class S // AWD Tuner', desc: 'Electronic AWD traction powerhouse. Rocket acceleration out of every weather corner.' },
+        hyper_phantom: { name: 'Phantom-GT Midship', classType: 'Class SS // Hyper Apex', desc: 'Midship twin-turbo hypercar with aerodynamic downforce and supernatural grip limits.' }
+      },
+
+      tunings: {
+        engine: { name: 'Engine Block & ECU', effect: '+Top Speed, +RPM Range' },
+        turbo: { name: 'Twin-Scroll Turbocharger', effect: '+Accel Torque, +Fast Spool' },
+        tires: { name: 'Racing Compound Slicks', effect: '+Lateral Grip, +Drift Stability' },
+        brakes: { name: 'Carbon Ceramic Brakes', effect: '+Braking Force, +Turn Lock' },
+        chassis: { name: 'Lightweight Carbon Chassis', effect: '-Curb Weight, +Agility' },
+        nos: { name: 'NOS Liquid Nitrous Kit', effect: '+NOS Capacity, +Thrust' }
+      },
+
+      circuits: [
+        { name: 'Neon Docks', desc: 'High-speed oval and fundamental hairpins set across the neon docks' },
+        { name: 'Industrial Alley', desc: 'Consecutive 90-degree square corners with tight industrial guardrails' },
+        { name: 'Harbor Sprint', desc: 'Long seaside straightaway followed by a sudden technical S-chicane' },
+        { name: 'Riverside Loop', desc: 'Sweeping riverside hairpins and rhythm-demanding technical bends' },
+        { name: 'Expressway Junction', desc: 'Elevated highway junction where slipstream overtaking decides victory' },
+        { name: 'Chinatown Chicanes', desc: 'Triple tight chicanes weaving between neon lanterns and narrow alleys' },
+        { name: 'Neo Shinjuku Strip', desc: 'Giant neon skyscrapers. 300 km/h straight followed by an extreme hairpin' },
+        { name: 'Cyber Tunnel Run', desc: 'Blind high-speed curves and banked turns deep inside an underground tube' },
+        { name: 'Midnight Skyline', desc: 'Scenic coastal highway linked to suburbs with pure technical drift sectors' },
+        { name: 'Apex International Ring', desc: 'Championship grand prix ring testing the zenith of racing techniques' },
+        { name: 'Devil\'s Hairpin Pass', desc: 'Relentless five-hairpin mountain pass requiring flawless countersteer' },
+        { name: 'Underground Grand Finale', desc: 'The longest battlefield where the greatest rivals clash for immortality' }
+      ],
+
+      bounties: {
+        bounty_drift_1: { title: 'Smoke King', desc: 'Score 3,500+ drift points in a single race' },
+        bounty_clean_win: { title: 'Ghost Driver', desc: 'Finish 1st with 3 or fewer wall collisions' },
+        bounty_drag_fast: { title: 'Quarter-Mile Demon', desc: 'Complete 1/4 mile drag strip in under 11.5 seconds' },
+        bounty_grandmaster: { title: 'Apex Legend', desc: 'Win at least 1 Grand Master League circuit' }
+      }
+    },
+
+    ja: {
+      menu_subtitle: 'アングラ・エイペックス // サイバーサーキットRPG',
+      btn_career: '🏁 キャリアリーグ',
+      btn_garage: '🔧 ガレージ＆チューニング',
+      btn_drag: '⚡ ゼロヨン・ドラッグレース',
+      btn_bounties: '🏆 スポンサー契約（バウンティ）',
+      btn_audio: '🔊 サウンド ON/OFF',
+      btn_reset: 'セーブデータ初期化',
+      menu_hint: '操作: [W/A/S/D] または [矢印キー] 走行、[SPACE] ドリフト、[SHIFT] NOSブースト',
+      btn_back: 'メインメニューへ戻る',
+      btn_prev: '◀ 前へ',
+      btn_next: '次へ ▶',
+
+      career_title: 'キャリア・レーシングリーグ',
+      career_subtitle: '地下アンダーグラウンドの全12サーキットを制覇し、伝説の走り屋となれ',
+      league_0: '1. ルーキーカップ',
+      league_1: '2. クラブマンカップ',
+      league_2: '3. ナイトストリート',
+      league_3: '4. グランドマスター',
+      prize_label: '優勝賞金:',
+      bestlap_label: 'ベスト記録:',
+      circuit_start_btn: 'サーキットレース開始',
+      circuit_locked_btn: '🔒 ロック中',
+
+      garage_title: 'アングラガレージ＆チューン工房',
+      garage_subtitle: '6種のマシン獲得、6系統のパーツチューン、ネオンカラー塗装',
+      car_active_btn: '現在搭乗中 (Active)',
+      car_select_btn: 'このマシンを選択',
+      car_buy_btn: 'マシン購入',
+      garage_paint_label: 'ネオン塗装カスタム:',
+      stat_speed: '最高速度',
+      stat_accel: '加速トルク',
+      stat_grip: 'ドリフト制御＆旋回グリップ',
+      stat_weight: '車重＆シャシーバランス',
+      tuning_header: 'パフォーマンスパーツ・チューン',
+      tier_max: 'MAX TIER',
+
+      drag_title: '1/4マイル(400M) ゼロヨンドラッグ',
+      drag_subtitle: 'タコメーターのグリーンゾーンを見極め、神速シフトでライバルをねじ伏せろ',
+      drag_gear_lbl: 'ギア: ',
+      drag_gear_unit: '速',
+      drag_dist_lbl: '距離: ',
+      drag_time_lbl: 'タイム: ',
+      btn_drag_start: 'レース開始 (Space)',
+      btn_drag_shift: 'シフトチェンジ！ (Shift / Space)',
+      drag_ready: 'READY...',
+      drag_perfect: 'PERFECT! ▲',
+      drag_good: 'GOOD! ▲',
+      drag_early: 'EARLY! ▼',
+      drag_late: 'LATE! ▼',
+      drag_over_rev: 'OVER REV! ✕',
+      drag_finish_title: '【ゼロヨン・ゴールライン通過！】',
+      drag_victory: '🏆 勝利 (VICTORY)',
+      drag_defeat: '敗北 (DEFEAT)',
+      drag_record_lbl: 'タイム:',
+      drag_zero100_lbl: '0-100 km/h:',
+      drag_topspeed_lbl: '最高速度:',
+      drag_reward_lbl: '獲得賞金:',
+
+      bounties_title: 'スポンサー契約ミッション（バウンティ）',
+      bounties_subtitle: 'アンダーグラウンドのスポンサー依頼を完遂し、莫大な特別賞金を獲得せよ',
+      bounty_claimed: '✓ 契約完了 (Claimed)',
+      bounty_progress: '進行中 (In Progress)',
+
+      hud_hint: '[W/▲] アクセル &nbsp;|&nbsp; [S/▼] ブレーキ/後退<br>[A/D] ステア &nbsp;|&nbsp; [SPACE] パワードリフト<br>[SHIFT] NOSブースト &nbsp;|&nbsp; [ESC] ポーズ',
+      hud_slipstream: 'スリップストリーム・ブースト ▲',
+      hud_pos: 'POS',
+      hud_lap: 'LAP',
+      hud_time: 'TIME',
+
+      res_title: 'レースリザルト',
+      res_pos_lbl: '最終順位',
+      res_pos_1: '1位（優勝！）',
+      res_pos_2: '2位（完走）',
+      res_pos_3: '3位（完走）',
+      res_pos_4: '4位（完走）',
+      res_time_lbl: 'トータルタイム (Total Time)',
+      res_bestlap_lbl: 'ベストラップ (Best Lap)',
+      res_drift_lbl: '合計ドリフトポイント',
+      res_reward_lbl: '獲得賞金 (Total Reward)',
+      btn_retry: '再挑戦 (Retry)',
+      btn_continue: 'キャリアへ戻る (Continue)',
+
+      pause_title: '一時停止 (PAUSE)',
+      btn_resume: 'レース再開 (Resume)',
+      btn_restart: '最初から再挑戦 (Restart)',
+      btn_quit: 'レースをリタイア (Quit)',
+
+      reset_confirm: '本当にすべてのセーブデータを初期化しますか？（元に戻せません）',
+
+      cars: {
+        hatchback_ae: { name: 'AE-Sprinter', classType: 'Class C // ハッチバック', desc: '軽量ホットハッチ。機敏なノーズの入りと軽快なコーナリングで初心者に最適なスターターマシン。' },
+        coupe_silvia: { name: 'Silvia-K2', classType: 'Class B // ストリートクーペ', desc: 'FRドリフトの金字塔。サイドブレーキからのパワードリフトとアングル維持が極めて秀逸。' },
+        muscle_v8: { name: 'Muscle-V8 Thunder', classType: 'Class B // クラシックマッスル', desc: '圧倒的なV8スーパーチャージャートルク。直線をねじ伏せ強烈なパワーオーバーステアを放つ。' },
+        rotary_apex: { name: 'Rotary-Apex RX', classType: 'Class A // ロータリースポーツ', desc: '9,000回転の高回転ツインロータリー。カミソリのようなエイペックス攻略と美麗な高速ドリフト。' },
+        tuner_awd: { name: 'Shadow-R AWD', classType: 'Class S // AWDチューナー', desc: '電子制御4WDの猛獣。どんな悪条件のコーナーからでもロケットのように立ち上がる。' },
+        hyper_phantom: { name: 'Phantom-GT Midship', classType: 'Class SS // ハイパーエイペックス', desc: 'ミッドシップツインターボハイパーカー。空力ダウンフォースと限界旋回性能の頂点。' }
+      },
+
+      tunings: {
+        engine: { name: '高回転レーシングエンジン', effect: '+最高速度、+高回転パワー' },
+        turbo: { name: 'ツインスクロールターボ', effect: '+加速トルク、+レスポンス' },
+        tires: { name: '競技用コンパウンドタイヤ', effect: '+旋回横グリップ、+ドリフト安定性' },
+        brakes: { name: 'カーボンセラミックブレーキ', effect: '+制動力、+サイドターン応答' },
+        chassis: { name: '軽量カーボンシャシー', effect: '-車両重量、+回頭性向上' },
+        nos: { name: 'NOS液体ナイトロキット', effect: '+NOS容量、+加速推力' }
+      },
+
+      circuits: [
+        { name: 'ネオンドックス (Neon Docks)', desc: '埠頭の広場に特設された高速オーバル＆ヘアピンコース' },
+        { name: 'インダストリアル・アレイ', desc: '工場地帯の連続90度直角コーナーとガードレール' },
+        { name: 'ハーバースプリント (Harbor Sprint)', desc: '海風吹き抜けるロングストレートと急減速S字シケイン' },
+        { name: 'リバーサイドループ (Riverside)', desc: '川沿いを周回するロングヘアピンとテクニカルコーナー' },
+        { name: '高速ジャンクション (Expressway)', desc: '立体交差の高速分岐路。スリップストリーム勝負が決め手' },
+        { name: '中華街シケイン (Chinatown)', desc: '赤提灯揺れる路地裏を縫うスリリングな3連続シケイン' },
+        { name: 'ネオ新宿ストリップ (Neo Shinjuku)', desc: '摩天楼のネオン街。300km/h超の直線直後の限界ヘアピン' },
+        { name: 'サイバートンネル・ラン (Cyber Tunnel)', desc: '地下トンネルに潜むブラインドコーナーとバンク区間' },
+        { name: 'ミッドナイト・スカイライン', desc: '湾岸線と都心外郭を結ぶ究極のテクニカルドリフトコース' },
+        { name: 'エイペックス・インターナショナル', desc: 'すべての走りの真髄が試される最高峰グランプリサーキット' },
+        { name: '魔のヘアピン峠 (Devil\'s Hairpin)', desc: '息つく暇もない怒涛の5連ヘアピン。完璧なカウンター必須' },
+        { name: 'グランドフィナーレ (Grand Finale)', desc: '最長距離、最強の好敵手たちが集う伝説の最終決戦場' }
+      ],
+
+      bounties: {
+        bounty_drift_1: { title: 'スモーク・キング', desc: '1レースで合計ドリフトスコア3,500点以上を獲得' },
+        bounty_clean_win: { title: 'ゴースト・ドライバー', desc: '壁接触3回以下で1位優勝を果たす' },
+        bounty_drag_fast: { title: 'ゼロヨンの悪魔', desc: 'ドラッグレースを11.5秒以内で駆け抜ける' },
+        bounty_grandmaster: { title: 'アングラ・レジェンド', desc: 'グランドマスターリーグのサーキットで1回以上優勝' }
+      }
+    }
+  };
+
+  // ==========================================
+  // 5. PERSISTENT SAVE MANAGER (LOCALSTORAGE)
   // ==========================================
   class SaveManager {
     static STORAGE_KEY = 'NEON_DRIFT_SAVE_V2';
@@ -1702,6 +2164,7 @@
     static getDefaultData() {
       return {
         credits: 12000,
+        lang: 'ko',
         currentCarId: 'hatchback_ae',
         ownedCars: ['hatchback_ae'],
         carColors: {
@@ -2234,6 +2697,7 @@
       this.greenMaxRpm = 7600;
       this.gearRatios = [3.8, 2.5, 1.8, 1.3, 1.0];
       this.feedbackText = 'READY...';
+      this.feedbackKey = 'drag_ready';
       this.feedbackClass = '';
       this.zeroToHundredTime = null;
     }
@@ -2256,6 +2720,7 @@
       this.finished = false;
       this.zeroToHundredTime = null;
       this.feedbackText = 'LAUNCH!';
+      this.feedbackKey = 'drag_good';
       this.feedbackClass = 'good';
       if (this.sound) this.sound.playBeep(880, 0.15);
     }
@@ -2265,19 +2730,23 @@
 
       if (this.rpm >= this.greenMinRpm && this.rpm <= this.greenMaxRpm) {
         this.feedbackText = 'PERFECT SHIFT! +BOOST';
+        this.feedbackKey = 'drag_perfect';
         this.feedbackClass = 'perfect';
         this.speed *= 1.08;
         if (this.sound) this.sound.playBeep(1200, 0.12);
       } else if (this.rpm > this.greenMaxRpm) {
         this.feedbackText = 'OVER-REV! LATE';
+        this.feedbackKey = 'drag_late';
         this.feedbackClass = 'late';
         this.speed *= 0.94;
         if (this.sound) this.sound.playBeep(350, 0.15);
       } else if (this.rpm > 5000) {
         this.feedbackText = 'GOOD SHIFT';
+        this.feedbackKey = 'drag_good';
         this.feedbackClass = 'good';
       } else {
         this.feedbackText = 'TOO EARLY!';
+        this.feedbackKey = 'drag_early';
         this.feedbackClass = 'early';
         this.speed *= 0.88;
       }
@@ -2456,11 +2925,72 @@
       this.raceTimer = 0;
       this.raceFinished = false;
       this.previewCarIdx = 0;
+      this.currentLang = this.saveData.lang || 'ko';
 
       this.initDisplay();
       this.initEvents();
       this.initUI();
       this.startLoop();
+    }
+
+    t(key) {
+      if (I18N[this.currentLang] && I18N[this.currentLang][key] !== undefined) {
+        return I18N[this.currentLang][key];
+      }
+      if (I18N['ko'] && I18N['ko'][key] !== undefined) {
+        return I18N['ko'][key];
+      }
+      return key;
+    }
+
+    getCarI18n(id) {
+      return (I18N[this.currentLang]?.cars?.[id]) || I18N['ko']?.cars?.[id] || {};
+    }
+
+    getCircuitI18n(id) {
+      return (I18N[this.currentLang]?.circuits?.[id]) || I18N['ko']?.circuits?.[id] || {};
+    }
+
+    getTuningI18n(id) {
+      return (I18N[this.currentLang]?.tunings?.[id]) || I18N['ko']?.tunings?.[id] || {};
+    }
+
+    getBountyI18n(id) {
+      return (I18N[this.currentLang]?.bounties?.[id]) || I18N['ko']?.bounties?.[id] || {};
+    }
+
+    setLanguage(lang) {
+      if (!I18N[lang]) return;
+      this.currentLang = lang;
+      this.saveData.lang = lang;
+      SaveManager.save(this.saveData);
+      document.documentElement.lang = lang;
+
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === lang);
+      });
+
+      this.applyTranslations();
+    }
+
+    applyTranslations() {
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
+        const val = this.t(key);
+        if (val !== undefined) {
+          if (val.includes('<br>') || val.includes('&nbsp;') || val.includes('<b>')) {
+            el.innerHTML = val;
+          } else {
+            el.textContent = val;
+          }
+        }
+      });
+
+      const activeLeagueBtn = document.querySelector('.league-tab-btn.active');
+      const activeLeagueId = activeLeagueBtn ? parseInt(activeLeagueBtn.dataset.league, 10) : 0;
+      this.renderCircuitCards(activeLeagueId);
+      this.renderGarageShowcase();
+      this.renderBountiesList();
     }
 
     initDisplay() {
@@ -2539,6 +3069,11 @@
     initUI() {
       this.updateCreditsDisplays();
 
+      // Language Switcher Buttons
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.onclick = () => this.setLanguage(btn.dataset.lang);
+      });
+
       // Menu Buttons
       document.getElementById('btn-menu-career').onclick = () => this.showScreen('career');
       document.getElementById('btn-menu-garage').onclick = () => this.showScreen('garage');
@@ -2547,15 +3082,19 @@
 
       document.getElementById('btn-audio-toggle').onclick = (e) => {
         const enabled = this.sound.toggle();
-        e.target.textContent = enabled ? '🔊 오디오 ON' : '🔈 오디오 OFF';
+        const icon = enabled ? '🔊' : '🔈';
+        const onText = this.currentLang === 'ko' ? '오디오 ON' : (this.currentLang === 'ja' ? 'サウンド ON' : 'Audio ON');
+        const offText = this.currentLang === 'ko' ? '오디오 OFF' : (this.currentLang === 'ja' ? 'サウンド OFF' : 'Audio OFF');
+        e.target.textContent = `${icon} ${enabled ? onText : offText}`;
       };
 
       document.getElementById('btn-data-reset').onclick = () => {
-        if (confirm('모든 커리어 진행도 및 차고 튜닝을 초기화하시겠습니까?')) {
+        if (confirm(this.t('reset_confirm'))) {
           this.saveData = SaveManager.reset();
           this.updateCreditsDisplays();
           this.renderGarageShowcase();
-          alert('데이터가 초기화되었습니다.');
+          const resetMsg = this.currentLang === 'ko' ? '데이터가 초기화되었습니다.' : (this.currentLang === 'ja' ? 'データが初期化されました。' : 'Save data reset successfully.');
+          alert(resetMsg);
         }
       };
 
@@ -2623,7 +3162,8 @@
             this.renderGarageShowcase();
             if (this.sound) this.sound.playBeep(950, 0.2);
           } else {
-            alert('상금이 부족합니다!');
+            const noFundsMsg = this.currentLang === 'ko' ? '상금이 부족합니다!' : (this.currentLang === 'ja' ? '賞金が不足しています！' : 'Insufficient credits!');
+            alert(noFundsMsg);
           }
         }
       };
@@ -2644,9 +3184,7 @@
         colorContainer.appendChild(swatch);
       });
 
-      this.renderCircuitCards(0);
-      this.renderGarageShowcase();
-      this.renderBountiesList();
+      this.setLanguage(this.saveData.lang || 'ko');
     }
 
     updateCreditsDisplays() {
@@ -2662,6 +3200,11 @@
         const el = document.getElementById(`${s}-screen`) || document.getElementById(s);
         if (el) el.classList.add('hidden');
       });
+
+      const langBar = document.getElementById('lang-switch-bar');
+      if (langBar) {
+        langBar.classList.toggle('hidden', screenName === 'race');
+      }
 
       if (screenName === 'race') {
         document.getElementById('race-hud').classList.remove('hidden');
@@ -2687,23 +3230,26 @@
         const stars = this.saveData.circuitStars[circ.id] || 0;
         const bestLap = this.saveData.circuitBestLaps[circ.id];
         const isLocked = !isLeagueUnlocked;
+        const circI18n = this.getCircuitI18n(circ.id);
+        const circName = circI18n.name || circ.name;
+        const circDesc = circI18n.desc || circ.desc;
 
         card.className = `circuit-card ${isLocked ? 'locked' : ''}`;
         card.innerHTML = `
           <div class="circuit-header">
-            <div class="circuit-title">${circ.name}</div>
+            <div class="circuit-title">${circName}</div>
             <div class="circuit-stars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</div>
           </div>
-          <div style="font-size: 11px; color: var(--text-muted);">${circ.desc}</div>
+          <div style="font-size: 11px; color: var(--text-muted);">${circDesc}</div>
           <div class="circuit-preview-box">
             <canvas width="220" height="90" id="circ-mini-${circ.id}"></canvas>
           </div>
           <div class="circuit-meta">
-            <span>우승 상금: <b style="color: var(--neon-yellow);">${circ.prize.toLocaleString()} CR</b></span>
-            <span>최고 기록: <b>${bestLap ? bestLap.toFixed(2) + 's' : '--'}</b></span>
+            <span>${this.t('prize_label')} <b style="color: var(--neon-yellow);">${circ.prize.toLocaleString()} CR</b></span>
+            <span>${this.t('bestlap_label')} <b>${bestLap ? bestLap.toFixed(2) + 's' : '--'}</b></span>
           </div>
           <button class="btn btn-small btn-green btn-start-race" style="margin-top: 6px;" ${isLocked ? 'disabled' : ''}>
-            ${isLocked ? '🔒 잠김' : '서킷 레이스 시작'}
+            ${isLocked ? this.t('circuit_locked_btn') : this.t('circuit_start_btn')}
           </button>
         `;
 
@@ -2774,21 +3320,22 @@
       const owned = this.saveData.ownedCars.includes(car.id);
       const isSelected = this.saveData.currentCarId === car.id;
       const carColor = this.saveData.carColors[car.id] || car.color;
+      const carI18n = this.getCarI18n(car.id);
 
-      document.getElementById('garage-car-name').textContent = car.name;
-      document.getElementById('garage-car-class').textContent = car.classType;
+      document.getElementById('garage-car-name').textContent = carI18n.name || car.name;
+      document.getElementById('garage-car-class').textContent = carI18n.classType || car.classType;
 
       const actionBtn = document.getElementById('btn-car-action');
       if (isSelected) {
-        actionBtn.textContent = '현재 탑승 중 (Active)';
+        actionBtn.textContent = this.t('car_active_btn');
         actionBtn.className = 'btn btn-green';
         actionBtn.disabled = true;
       } else if (owned) {
-        actionBtn.textContent = '이 머신 선택하기 (Select)';
+        actionBtn.textContent = this.t('car_select_btn');
         actionBtn.className = 'btn btn-green';
         actionBtn.disabled = false;
       } else {
-        actionBtn.textContent = `머신 구매 (${car.price.toLocaleString()} CR)`;
+        actionBtn.textContent = `${this.t('car_buy_btn')} (${car.price.toLocaleString()} CR)`;
         actionBtn.className = 'btn btn-pink';
         actionBtn.disabled = this.saveData.credits < car.price;
       }
@@ -2831,6 +3378,7 @@
         const maxTier = 5;
         const nextCost = Math.round(cat.baseCost * Math.pow(cat.costMult, tier));
         const isMax = tier >= maxTier;
+        const catI18n = this.getTuningI18n(cat.id);
 
         const card = document.createElement('div');
         card.className = 'part-card';
@@ -2842,13 +3390,13 @@
 
         card.innerHTML = `
           <div class="part-details">
-            <div class="part-name">${cat.name}</div>
+            <div class="part-name">${catI18n.name || cat.name}</div>
             <div class="part-tier-pips">${pipsHtml}</div>
-            <div class="part-effect">${cat.statEffect}</div>
+            <div class="part-effect">${catI18n.effect || cat.statEffect}</div>
           </div>
           <div>
             <button class="btn btn-small ${isMax ? '' : 'btn-green'} btn-upgrade" ${isMax || !owned || this.saveData.credits < nextCost ? 'disabled' : ''}>
-              ${isMax ? 'MAX TIER' : `Lv.${tier + 1} (${nextCost.toLocaleString()} CR)`}
+              ${isMax ? this.t('tier_max') : `Lv.${tier + 1} (${nextCost.toLocaleString()} CR)`}
             </button>
           </div>
         `;
@@ -2877,19 +3425,20 @@
       BOUNTIES.forEach(b => {
         const savedBounty = this.saveData.bounties.find(sb => sb.id === b.id);
         const isDone = savedBounty ? savedBounty.completed : false;
+        const bI18n = this.getBountyI18n(b.id);
 
         const item = document.createElement('div');
         item.className = 'part-card';
         item.style.borderColor = isDone ? 'var(--neon-green)' : 'rgba(255, 255, 255, 0.1)';
         item.innerHTML = `
           <div>
-            <div style="font-size: 16px; font-weight: 800; color: ${isDone ? 'var(--neon-green)' : '#fff'};">${b.title}</div>
-            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">${b.desc}</div>
+            <div style="font-size: 16px; font-weight: 800; color: ${isDone ? 'var(--neon-green)' : '#fff'};">${bI18n.title || b.title}</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">${bI18n.desc || b.desc}</div>
           </div>
           <div style="text-align: right;">
             <div style="font-size: 15px; font-weight: 900; color: var(--neon-yellow);">${b.reward.toLocaleString()} CR</div>
             <div style="font-size: 12px; font-weight: 700; color: ${isDone ? 'var(--neon-green)' : 'var(--neon-cyan)'}; margin-top: 4px;">
-              ${isDone ? '✓ 계약 완료 (Claimed)' : '진행 중 (In Progress)'}
+              ${isDone ? this.t('bounty_claimed') : this.t('bounty_progress')}
             </div>
           </div>
         `;
@@ -3015,8 +3564,10 @@
 
       SaveManager.save(this.saveData);
 
-      document.getElementById('result-circuit-name').textContent = `${this.currentCircuit.name} (Laps: ${this.currentCircuit.laps})`;
-      document.getElementById('res-pos-val').textContent = `${playerPos}위 (${playerPos === 1 ? '우승!' : '완주'})`;
+      const circI18n = this.getCircuitI18n(this.currentCircuit.id);
+      const circName = circI18n.name || this.currentCircuit.name;
+      document.getElementById('result-circuit-name').textContent = `${circName} (Laps: ${this.currentCircuit.laps})`;
+      document.getElementById('res-pos-val').textContent = this.t('res_pos_' + playerPos);
       document.getElementById('res-pos-val').style.color = playerPos === 1 ? 'var(--neon-yellow)' : 'var(--neon-cyan)';
       document.getElementById('res-time-val').textContent = this.formatTime(totalTime);
       document.getElementById('res-bestlap-val').textContent = `${bestLap.toFixed(2)}s`;
@@ -3488,7 +4039,7 @@
       document.getElementById('drag-time-display').textContent = `${this.dragRace.timer.toFixed(2)} s`;
 
       const hintEl = document.getElementById('drag-shift-feedback');
-      hintEl.textContent = this.dragRace.feedbackText;
+      hintEl.textContent = this.dragRace.feedbackKey ? this.t(this.dragRace.feedbackKey) : this.dragRace.feedbackText;
       hintEl.className = `drag-shift-hint ${this.dragRace.feedbackClass}`;
 
       const rpmRatio = this.dragRace.rpm / this.dragRace.maxRpm;
@@ -3510,7 +4061,14 @@
         this.updateCreditsDisplays();
 
         setTimeout(() => {
-          alert(`[1/4마일 결승선 통과!]\n결과: ${res.won ? '🏆 승리 (VICTORY)' : '패배 (DEFEAT)'}\n기록: ${res.time.toFixed(2)}초\n0-100km/h: ${res.zeroToHundred.toFixed(2)}초\n최고속도: ${res.topSpeedKmh} km/h\n상금: +${reward.toLocaleString()} CR`);
+          const title = this.t('drag_finish_title');
+          const outcome = res.won ? this.t('drag_victory') : this.t('drag_defeat');
+          const timeLbl = this.t('drag_record_lbl');
+          const zero100Lbl = this.t('drag_zero100_lbl');
+          const topSpeedLbl = this.t('drag_topspeed_lbl');
+          const rewardLbl = this.t('drag_reward_lbl');
+          const timeUnit = this.currentLang === 'ko' ? '초' : (this.currentLang === 'ja' ? '秒' : 's');
+          alert(`${title}\n${outcome}\n${timeLbl} ${res.time.toFixed(2)}${timeUnit}\n${zero100Lbl} ${res.zeroToHundred.toFixed(2)}${timeUnit}\n${topSpeedLbl} ${res.topSpeedKmh} km/h\n${rewardLbl} +${reward.toLocaleString()} CR`);
         }, 100);
       }
     }
